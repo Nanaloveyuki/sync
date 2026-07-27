@@ -46,7 +46,8 @@ pub fn[T] Thread::join(self : Thread[T]) -> T raise SyncError {
         Failed(message) => raise ThreadPanicked(message)
       }
     }
-    1 => raise ThreadAlreadyJoined
+    -1 => raise ThreadAlreadyJoined
+    -2 => raise ThreadJoinSelf
     code => raise ThreadJoinFailed(code)
   }
 }

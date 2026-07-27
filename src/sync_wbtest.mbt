@@ -220,3 +220,372 @@ test "bounded channel supports multiple producers" {
   second.join()
   assert_eq(sum, 19900)
 }
+
+///|
+fn rwlock_test_reader(
+  lock : RwLock,
+  active : AtomicInt,
+  overlap : AtomicInt,
+  started : AtomicInt,
+  release : AtomicInt,
+) -> Unit raise {
+  lock.with_read(fn() {
+    if active.fetch_add(1) > 0 {
+      ignore(overlap.fetch_add(1))
+    }
+    ignore(started.fetch_add(1))
+    while release.fetch_add(0, order=Acquire) == 0 {
+      yield_now()
+    }
+    ignore(active.fetch_add(-1))
+  })
+}
+
+///|
+test "rwlock permits concurrent readers" {
+  let lock = RwLock::new()
+  let active = AtomicInt::new(0)
+  let overlap = AtomicInt::new(0)
+  let started = AtomicInt::new(0)
+  let release = AtomicInt::new(0)
+  let first_lock = lock.share()
+  let first_active = active.share()
+  let first_overlap = overlap.share()
+  let first_started = started.share()
+  let first_release = release.share()
+  let first = spawn(fn() raise {
+    rwlock_test_reader(
+      first_lock, first_active, first_overlap, first_started, first_release,
+    )
+  })
+  let second_lock = lock.share()
+  let second_active = active.share()
+  let second_overlap = overlap.share()
+  let second_started = started.share()
+  let second_release = release.share()
+  let second = spawn(fn() raise {
+    rwlock_test_reader(
+      second_lock, second_active, second_overlap, second_started, second_release,
+    )
+  })
+  for spin = 0
+      spin < 100000 && started.fetch_add(0, order=Acquire) < 2
+      spin = spin + 1 {
+    yield_now()
+  }
+  ignore(release.swap(1, order=Release))
+  first.join()
+  second.join()
+  assert_true(overlap.fetch_add(0) > 0)
+  assert_eq(active.load(), 0)
+}
+
+///|
+fn rwlock_test_writer(
+  lock : RwLock,
+  active : AtomicInt,
+  violation : AtomicInt,
+) -> Unit raise {
+  for iteration = 0; iteration < 500; iteration = iteration + 1 {
+    lock.with_write(fn() {
+      if active.fetch_add(1) != 0 {
+        ignore(violation.fetch_add(1))
+      }
+      yield_now()
+      ignore(active.fetch_add(-1))
+    })
+  }
+}
+
+///|
+test "rwlock writers are exclusive" {
+  let lock = RwLock::new()
+  let active = AtomicInt::new(0)
+  let violation = AtomicInt::new(0)
+  let first_lock = lock.share()
+  let first_active = active.share()
+  let first_violation = violation.share()
+  let first = spawn(fn() raise {
+    rwlock_test_writer(first_lock, first_active, first_violation)
+  })
+  let second_lock = lock.share()
+  let second_active = active.share()
+  let second_violation = violation.share()
+  let second = spawn(fn() raise {
+    rwlock_test_writer(second_lock, second_active, second_violation)
+  })
+  let third_lock = lock.share()
+  let third_active = active.share()
+  let third_violation = violation.share()
+  let third = spawn(fn() raise {
+    rwlock_test_writer(third_lock, third_active, third_violation)
+  })
+  first.join()
+  second.join()
+  third.join()
+  assert_eq(violation.fetch_add(0), 0)
+  assert_eq(active.load(), 0)
+}
+
+///|
+test "rwlock unlocks when a callback raises" {
+  let lock = RwLock::new()
+  try {
+    let _result : Unit = lock.with_write(fn() raise { raise WorkerFailed })
+    fail("write callback should raise")
+  } catch {
+    WorkerFailed => ()
+    _ => fail("unexpected error")
+  }
+  try {
+    let _result : Unit = lock.with_read(fn() raise { raise WorkerFailed })
+    fail("read callback should raise")
+  } catch {
+    WorkerFailed => ()
+    _ => fail("unexpected error")
+  }
+  assert_eq(lock.with_read(fn() { 42 }), 42)
+}
+
+///|
+test "rwlock writer excludes readers" {
+  let lock = RwLock::new()
+  let writer_started = AtomicInt::new(0)
+  let release_writer = AtomicInt::new(0)
+  let reader_attempting = AtomicInt::new(0)
+  let reader_entered = AtomicInt::new(0)
+  let writer_lock = lock.share()
+  let worker_started = writer_started.share()
+  let worker_release = release_writer.share()
+  let writer = spawn(fn() raise {
+    writer_lock.with_write(fn() {
+      ignore(worker_started.fetch_add(1))
+      while worker_release.fetch_add(0) == 0 {
+        yield_now()
+      }
+    })
+  })
+  while writer_started.fetch_add(0) == 0 {
+    yield_now()
+  }
+  let reader_lock = lock.share()
+  let worker_attempting = reader_attempting.share()
+  let worker_entered = reader_entered.share()
+  let reader = spawn(fn() raise {
+    ignore(worker_attempting.fetch_add(1))
+    reader_lock.with_read(fn() { ignore(worker_entered.fetch_add(1)) })
+  })
+  while reader_attempting.fetch_add(0) == 0 {
+    yield_now()
+  }
+  for spin = 0; spin < 10000; spin = spin + 1 {
+    yield_now()
+  }
+  assert_eq(reader_entered.fetch_add(0), 0)
+  ignore(release_writer.fetch_add(1))
+  writer.join()
+  reader.join()
+  assert_eq(reader_entered.fetch_add(0), 1)
+}
+
+///|
+fn pool_test_blocking_task(
+  started : AtomicInt,
+  release : AtomicInt,
+  completed : AtomicInt,
+) -> Unit {
+  ignore(started.fetch_add(1))
+  while release.fetch_add(0, order=Acquire) == 0 {
+    yield_now()
+  }
+  ignore(completed.fetch_add(1))
+}
+
+///|
+test "thread pool runs a fixed set of workers and drains on shutdown" {
+  let pool = ThreadPool::new(4, 8)
+  let started = AtomicInt::new(0)
+  let release = AtomicInt::new(0)
+  let completed = AtomicInt::new(0)
+  for task_index = 0; task_index < 4; task_index = task_index + 1 {
+    let task_started = started.share()
+    let task_release = release.share()
+    let task_completed = completed.share()
+    pool.execute(fn() {
+      pool_test_blocking_task(task_started, task_release, task_completed)
+    })
+  }
+  for spin = 0
+      spin < 100000 && started.fetch_add(0, order=Acquire) < 4
+      spin = spin + 1 {
+    yield_now()
+  }
+  assert_eq(started.fetch_add(0), 4)
+  assert_eq(pool.worker_count(), 4)
+  ignore(release.swap(1, order=Release))
+  pool.shutdown()
+  assert_eq(completed.load(), 4)
+  assert_eq(pool.pending_count(), 0)
+  assert_true(pool.is_closed())
+  pool.shutdown()
+}
+
+///|
+test "thread pool reports full and closed queues" {
+  let pool = ThreadPool::new(1, 1)
+  let started = AtomicInt::new(0)
+  let release = AtomicInt::new(0)
+  let worker_started = started.share()
+  let worker_release = release.share()
+  pool.execute(fn() {
+    ignore(worker_started.swap(1, order=Release))
+    while worker_release.fetch_add(0, order=Acquire) == 0 {
+      yield_now()
+    }
+  })
+  for spin = 0
+      spin < 100000 && started.fetch_add(0, order=Acquire) == 0
+      spin = spin + 1 {
+    yield_now()
+  }
+  assert_eq(started.fetch_add(0), 1)
+  assert_eq(pool.try_execute(fn() {  }), Submitted)
+  assert_eq(pool.try_execute(fn() {  }), QueueFull)
+  ignore(release.swap(1, order=Release))
+  pool.close()
+  pool.shutdown()
+  assert_eq(pool.try_execute(fn() {  }), PoolClosed)
+  try {
+    pool.execute(fn() {  })
+    fail("closed pool should reject tasks")
+  } catch {
+    ThreadPoolClosed => ()
+    _ => fail("unexpected error")
+  }
+}
+
+///|
+test "thread pool accepts concurrent producers" {
+  let pool = ThreadPool::new(3, 16)
+  let completed = AtomicInt::new(0)
+  let first_pool = pool.share()
+  let first_completed = completed.share()
+  let first = spawn(fn() raise {
+    for task_index = 0; task_index < 100; task_index = task_index + 1 {
+      let counter = first_completed.share()
+      first_pool.execute(fn() { ignore(counter.fetch_add(1)) })
+    }
+  })
+  let second_pool = pool.share()
+  let second_completed = completed.share()
+  let second = spawn(fn() raise {
+    for task_index = 0; task_index < 100; task_index = task_index + 1 {
+      let counter = second_completed.share()
+      second_pool.execute(fn() { ignore(counter.fetch_add(1)) })
+    }
+  })
+  first.join()
+  second.join()
+  pool.shutdown()
+  assert_eq(completed.load(), 200)
+}
+
+///|
+test "thread pool rejects self shutdown without losing the worker" {
+  let pool = ThreadPool::new(1, 1)
+  let worker_pool = pool.share()
+  let rejected = AtomicInt::new(0)
+  let worker_rejected = rejected.share()
+  pool.execute(fn() {
+    worker_pool.shutdown() catch {
+      ThreadPoolShutdownFromWorker => ignore(worker_rejected.fetch_add(1))
+      _ => ()
+    }
+  })
+  pool.shutdown()
+  assert_eq(rejected.fetch_add(0), 1)
+}
+
+///|
+test "thread pool rejects a blocking self submit when full" {
+  let pool = ThreadPool::new(1, 1)
+  let worker_pool = pool.share()
+  let started = AtomicInt::new(0)
+  let attempt = AtomicInt::new(0)
+  let outcome = AtomicInt::new(0)
+  let worker_started = started.share()
+  let worker_attempt = attempt.share()
+  let worker_outcome = outcome.share()
+  pool.execute(fn() {
+    ignore(worker_started.fetch_add(1))
+    while worker_attempt.fetch_add(0) == 0 {
+      yield_now()
+    }
+    try worker_pool.execute(fn() {  }) catch {
+      ThreadPoolWouldDeadlock => ignore(worker_outcome.swap(1))
+      _ => ignore(worker_outcome.swap(2))
+    } noraise {
+      _ => ignore(worker_outcome.swap(3))
+    }
+  })
+  while started.fetch_add(0) == 0 {
+    yield_now()
+  }
+  pool.execute(fn() {  })
+  ignore(attempt.fetch_add(1))
+  while outcome.fetch_add(0) == 0 {
+    yield_now()
+  }
+  pool.shutdown()
+  assert_eq(outcome.fetch_add(0), 1)
+}
+
+///|
+test "thread pool validates its configuration" {
+  try {
+    ignore(ThreadPool::new(0, 1))
+    fail("zero workers should fail")
+  } catch {
+    InvalidWorkerCount(0) => ()
+    _ => fail("unexpected error")
+  }
+  try {
+    ignore(ThreadPool::new(1, 0))
+    fail("zero queue capacity should fail")
+  } catch {
+    InvalidCapacity(0) => ()
+    _ => fail("unexpected error")
+  }
+}
+
+///|
+fn launch_pool_without_shutdown(completed : AtomicInt) -> Unit raise SyncError {
+  let pool = ThreadPool::new(2, 4)
+  for task_index = 0; task_index < 4; task_index = task_index + 1 {
+    let task_completed = completed.share()
+    pool.execute(fn() { ignore(task_completed.fetch_add(1)) })
+  }
+}
+
+///|
+test "dropping the last pool handle closes and drains tasks" {
+  let completed = AtomicInt::new(0)
+  launch_pool_without_shutdown(completed.share())
+  for spin = 0; spin < 100000 && completed.fetch_add(0) < 4; spin = spin + 1 {
+    yield_now()
+  }
+  assert_eq(completed.fetch_add(0), 4)
+}
+
+///|
+test "concurrent thread pool shutdown is idempotent" {
+  let pool = ThreadPool::new(2, 2)
+  let first_pool = pool.share()
+  let second_pool = pool.share()
+  let first = spawn(fn() raise { first_pool.shutdown() })
+  let second = spawn(fn() raise { second_pool.shutdown() })
+  first.join()
+  second.join()
+  assert_true(pool.is_closed())
+  pool.shutdown()
+}

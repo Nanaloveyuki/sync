@@ -31,11 +31,19 @@ fn MemoryOrdering::code(self : MemoryOrdering) -> Int {
 pub(all) suberror SyncError {
   InvalidMemoryOrdering(String)
   InvalidCapacity(Int)
+  InvalidWorkerCount(Int)
   InvalidWaitGroupCount
+  RwLockInitializationFailed(Int)
+  RwLockOperationFailed(Int)
   ThreadCreationFailed(Int)
   ThreadJoinFailed(Int)
   ThreadAlreadyJoined
+  ThreadJoinSelf
   ThreadPanicked(String)
+  ThreadPoolCreationFailed(Int)
+  ThreadPoolClosed
+  ThreadPoolWouldDeadlock
+  ThreadPoolShutdownFromWorker
   OncePoisoned
 } derive(Debug)
 
@@ -57,6 +65,16 @@ pub(all) enum TryRecvResult[T] {
   Received(T)
   Empty
   Closed
+} derive(Eq, Debug)
+
+///|
+/// Result of a non-blocking thread-pool submission.
+///
+/// The submitted closure is consumed for every result variant.
+pub(all) enum TryExecuteResult {
+  Submitted
+  QueueFull
+  PoolClosed
 } derive(Eq, Debug)
 
 ///|
