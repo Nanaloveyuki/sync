@@ -1,0 +1,57 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/atomic"
+
+import {
+  "Nanaloveyuki/sync/types",
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type AtomicBool
+pub fn AtomicBool::compare_exchange(Self, Bool, Bool, success? : MemoryOrdering, failure? : MemoryOrdering) -> CompareExchangeResult[Bool] raise @types.SyncError
+pub fn AtomicBool::load(Self, order? : MemoryOrdering) -> Bool raise @types.SyncError
+pub fn AtomicBool::new(Bool) -> Self
+pub fn AtomicBool::share(Self) -> Self
+pub fn AtomicBool::store(Self, Bool, order? : MemoryOrdering) -> Unit raise @types.SyncError
+pub fn AtomicBool::swap(Self, Bool, order? : MemoryOrdering) -> Bool
+
+type AtomicInt
+pub fn AtomicInt::compare_exchange(Self, Int, Int, success? : MemoryOrdering, failure? : MemoryOrdering) -> CompareExchangeResult[Int] raise @types.SyncError
+pub fn AtomicInt::fetch_add(Self, Int, order? : MemoryOrdering) -> Int
+pub fn AtomicInt::load(Self, order? : MemoryOrdering) -> Int raise @types.SyncError
+pub fn AtomicInt::new(Int) -> Self
+pub fn AtomicInt::share(Self) -> Self
+pub fn AtomicInt::store(Self, Int, order? : MemoryOrdering) -> Unit raise @types.SyncError
+pub fn AtomicInt::swap(Self, Int, order? : MemoryOrdering) -> Int
+
+type AtomicUInt
+pub fn AtomicUInt::compare_exchange(Self, UInt, UInt, success? : MemoryOrdering, failure? : MemoryOrdering) -> CompareExchangeResult[UInt] raise @types.SyncError
+pub fn AtomicUInt::fetch_add(Self, UInt, order? : MemoryOrdering) -> UInt
+pub fn AtomicUInt::load(Self, order? : MemoryOrdering) -> UInt raise @types.SyncError
+pub fn AtomicUInt::new(UInt) -> Self
+pub fn AtomicUInt::share(Self) -> Self
+pub fn AtomicUInt::store(Self, UInt, order? : MemoryOrdering) -> Unit raise @types.SyncError
+pub fn AtomicUInt::swap(Self, UInt, order? : MemoryOrdering) -> UInt
+
+pub struct CompareExchangeResult[T] {
+  observed : T
+  exchanged : Bool
+} derive(Eq, @debug.Debug)
+
+pub(all) enum MemoryOrdering {
+  Relaxed
+  Acquire
+  Release
+  AcqRel
+  SeqCst
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+pub using @types {type SyncError}
+
+// Traits
+

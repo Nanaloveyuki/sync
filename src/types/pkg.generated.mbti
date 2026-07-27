@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/types"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+pub(all) suberror SyncError {
+  InvalidMemoryOrdering(String)
+  InvalidCapacity(Int)
+  InvalidWorkerCount(Int)
+  InvalidWaitGroupCount
+  RwLockInitializationFailed(Int)
+  RwLockOperationFailed(Int)
+  ThreadCreationFailed(Int)
+  ThreadJoinFailed(Int)
+  ThreadAlreadyJoined
+  ThreadJoinSelf
+  ThreadPanicked(String)
+  ThreadPoolCreationFailed(Int)
+  ThreadPoolClosed
+  ThreadPoolWouldDeadlock
+  ThreadPoolShutdownFromWorker
+  OncePoisoned
+} derive(@debug.Debug)
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

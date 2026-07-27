@@ -10,7 +10,7 @@ pub fn RwLock::new() -> RwLock raise SyncError {
   let status = Ref::Ref(0)
   let lock = native_rwlock_new(status)
   if status.val != 0 {
-    raise RwLockInitializationFailed(status.val)
+    raise SyncError::RwLockInitializationFailed(status.val)
   }
   lock
 }
@@ -29,13 +29,13 @@ pub fn RwLock::share(self : RwLock) -> RwLock {
 pub fn[R] RwLock::with_read(self : RwLock, f : () -> R raise?) -> R raise {
   let lock_status = native_rwlock_read_lock(self)
   if lock_status != 0 {
-    raise RwLockOperationFailed(lock_status)
+    raise SyncError::RwLockOperationFailed(lock_status)
   }
   try f() catch {
     err => {
       let unlock_status = native_rwlock_read_unlock(self)
       if unlock_status != 0 {
-        raise RwLockOperationFailed(unlock_status)
+        raise SyncError::RwLockOperationFailed(unlock_status)
       }
       raise err
     }
@@ -43,7 +43,7 @@ pub fn[R] RwLock::with_read(self : RwLock, f : () -> R raise?) -> R raise {
     result => {
       let unlock_status = native_rwlock_read_unlock(self)
       if unlock_status != 0 {
-        raise RwLockOperationFailed(unlock_status)
+        raise SyncError::RwLockOperationFailed(unlock_status)
       }
       result
     }
@@ -55,13 +55,13 @@ pub fn[R] RwLock::with_read(self : RwLock, f : () -> R raise?) -> R raise {
 pub fn[R] RwLock::with_write(self : RwLock, f : () -> R raise?) -> R raise {
   let lock_status = native_rwlock_write_lock(self)
   if lock_status != 0 {
-    raise RwLockOperationFailed(lock_status)
+    raise SyncError::RwLockOperationFailed(lock_status)
   }
   try f() catch {
     err => {
       let unlock_status = native_rwlock_write_unlock(self)
       if unlock_status != 0 {
-        raise RwLockOperationFailed(unlock_status)
+        raise SyncError::RwLockOperationFailed(unlock_status)
       }
       raise err
     }
@@ -69,7 +69,7 @@ pub fn[R] RwLock::with_write(self : RwLock, f : () -> R raise?) -> R raise {
     result => {
       let unlock_status = native_rwlock_write_unlock(self)
       if unlock_status != 0 {
-        raise RwLockOperationFailed(unlock_status)
+        raise SyncError::RwLockOperationFailed(unlock_status)
       }
       result
     }

@@ -1,0 +1,15 @@
+import {
+  "Nanaloveyuki/sync/types",
+}
+
+import {
+  "Nanaloveyuki/sync/atomic",
+  "Nanaloveyuki/sync/thread",
+} for "wbtest"
+
+supported_targets = "native"
+
+options(
+  "native-stub": [ "native.c" ],
+  targets: { "native.mbt": [ "native" ] },
+)

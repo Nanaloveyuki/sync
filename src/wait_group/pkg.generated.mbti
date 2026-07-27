@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/wait_group"
+
+import {
+  "Nanaloveyuki/sync/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type WaitGroup
+pub fn WaitGroup::add(Self, Int) -> Unit raise @types.SyncError
+pub fn WaitGroup::done(Self) -> Unit raise @types.SyncError
+pub fn WaitGroup::new() -> Self
+pub fn WaitGroup::share(Self) -> Self
+pub fn WaitGroup::wait(Self) -> Unit
+
+// Type aliases
+pub using @types {type SyncError}
+
+// Traits
+

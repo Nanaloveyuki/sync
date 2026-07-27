@@ -2,7 +2,9 @@
 fn validate_load_order(order : MemoryOrdering) -> Unit raise SyncError {
   match order {
     Release | AcqRel =>
-      raise InvalidMemoryOrdering("load does not accept Release or AcqRel")
+      raise SyncError::InvalidMemoryOrdering(
+        "load does not accept Release or AcqRel",
+      )
     _ => ()
   }
 }
@@ -11,7 +13,9 @@ fn validate_load_order(order : MemoryOrdering) -> Unit raise SyncError {
 fn validate_store_order(order : MemoryOrdering) -> Unit raise SyncError {
   match order {
     Acquire | AcqRel =>
-      raise InvalidMemoryOrdering("store does not accept Acquire or AcqRel")
+      raise SyncError::InvalidMemoryOrdering(
+        "store does not accept Acquire or AcqRel",
+      )
     _ => ()
   }
 }
@@ -42,7 +46,7 @@ fn validate_compare_exchange_orders(
 ) -> Unit raise SyncError {
   let failure_level = failure_rank(failure)
   if failure_level < 0 || failure_level > success_failure_rank(success) {
-    raise InvalidMemoryOrdering(
+    raise SyncError::InvalidMemoryOrdering(
       "compare_exchange failure ordering cannot be Release, AcqRel, or stronger than success",
     )
   }

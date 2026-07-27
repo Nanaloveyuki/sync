@@ -9,10 +9,10 @@ pub fn ThreadPool::new(
   queue_capacity : Int,
 ) -> ThreadPool raise SyncError {
   if worker_count <= 0 {
-    raise InvalidWorkerCount(worker_count)
+    raise SyncError::InvalidWorkerCount(worker_count)
   }
   if queue_capacity <= 0 {
-    raise InvalidCapacity(queue_capacity)
+    raise SyncError::InvalidCapacity(queue_capacity)
   }
   let status = Ref::Ref(0)
   let pool = native_thread_pool_new(
@@ -22,7 +22,7 @@ pub fn ThreadPool::new(
     status,
   )
   if status.val != 0 {
-    raise ThreadPoolCreationFailed(status.val)
+    raise SyncError::ThreadPoolCreationFailed(status.val)
   }
   pool
 }
@@ -60,8 +60,8 @@ pub fn ThreadPool::execute(
 ) -> Unit raise SyncError {
   match native_thread_pool_execute(self, task) {
     0 => ()
-    3 => raise ThreadPoolWouldDeadlock
-    _ => raise ThreadPoolClosed
+    3 => raise SyncError::ThreadPoolWouldDeadlock
+    _ => raise SyncError::ThreadPoolClosed
   }
 }
 
@@ -78,7 +78,7 @@ pub fn ThreadPool::close(self : ThreadPool) -> Unit {
 /// deadlocking. It is safe to call repeatedly from external threads.
 pub fn ThreadPool::shutdown(self : ThreadPool) -> Unit raise SyncError {
   if native_thread_pool_shutdown(self) != 0 {
-    raise ThreadPoolShutdownFromWorker
+    raise SyncError::ThreadPoolShutdownFromWorker
   }
 }
 

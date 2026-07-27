@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/thread_pool"
+
+import {
+  "Nanaloveyuki/sync/types",
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type ThreadPool
+pub fn ThreadPool::close(Self) -> Unit
+pub fn ThreadPool::execute(Self, () -> Unit) -> Unit raise @types.SyncError
+pub fn ThreadPool::is_closed(Self) -> Bool
+pub fn ThreadPool::new(Int, Int) -> Self raise @types.SyncError
+pub fn ThreadPool::pending_count(Self) -> Int
+pub fn ThreadPool::share(Self) -> Self
+pub fn ThreadPool::shutdown(Self) -> Unit raise @types.SyncError
+pub fn ThreadPool::try_execute(Self, () -> Unit) -> TryExecuteResult
+pub fn ThreadPool::worker_count(Self) -> Int
+
+pub(all) enum TryExecuteResult {
+  Submitted
+  QueueFull
+  PoolClosed
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+pub using @types {type SyncError}
+
+// Traits
+
