@@ -19,11 +19,19 @@ pub fn yield_now() -> Unit
 pub(all) suberror SyncError {
   InvalidMemoryOrdering(String)
   InvalidCapacity(Int)
+  InvalidWorkerCount(Int)
   InvalidWaitGroupCount
+  RwLockInitializationFailed(Int)
+  RwLockOperationFailed(Int)
   ThreadCreationFailed(Int)
   ThreadJoinFailed(Int)
   ThreadAlreadyJoined
+  ThreadJoinSelf
   ThreadPanicked(String)
+  ThreadPoolCreationFailed(Int)
+  ThreadPoolClosed
+  ThreadPoolWouldDeadlock
+  ThreadPoolShutdownFromWorker
   OncePoisoned
 } derive(@debug.Debug)
 
@@ -95,6 +103,12 @@ pub fn[T] Receiver::length(Self[T]) -> Int
 pub fn[T] Receiver::recv(Self[T]) -> T?
 pub fn[T] Receiver::try_recv(Self[T]) -> TryRecvResult[T]
 
+type RwLock
+pub fn RwLock::new() -> Self raise SyncError
+pub fn RwLock::share(Self) -> Self
+pub fn[R] RwLock::with_read(Self, () -> R raise?) -> R raise
+pub fn[R] RwLock::with_write(Self, () -> R raise?) -> R raise
+
 pub struct Sender[T] {
   // private fields
 }
@@ -109,6 +123,23 @@ pub struct Thread[T] {
 pub fn[T] Thread::id(Self[T]) -> UInt64
 pub fn[T] Thread::join(Self[T]) -> T raise SyncError
 pub fn[T] Thread::spawn(() -> T raise) -> Self[T] raise SyncError
+
+type ThreadPool
+pub fn ThreadPool::close(Self) -> Unit
+pub fn ThreadPool::execute(Self, () -> Unit) -> Unit raise SyncError
+pub fn ThreadPool::is_closed(Self) -> Bool
+pub fn ThreadPool::new(Int, Int) -> Self raise SyncError
+pub fn ThreadPool::pending_count(Self) -> Int
+pub fn ThreadPool::share(Self) -> Self
+pub fn ThreadPool::shutdown(Self) -> Unit raise SyncError
+pub fn ThreadPool::try_execute(Self, () -> Unit) -> TryExecuteResult
+pub fn ThreadPool::worker_count(Self) -> Int
+
+pub(all) enum TryExecuteResult {
+  Submitted
+  QueueFull
+  PoolClosed
+} derive(Eq, @debug.Debug)
 
 pub(all) enum TryRecvResult[T] {
   Received(T)
