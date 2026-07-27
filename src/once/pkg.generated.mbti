@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/once"
+
+import {
+  "Nanaloveyuki/sync/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type Once
+pub fn Once::call_once(Self, () -> Unit raise?) -> Unit raise
+pub fn Once::new() -> Self
+pub fn Once::share(Self) -> Self
+
+// Type aliases
+pub using @types {type SyncError}
+
+// Traits
+

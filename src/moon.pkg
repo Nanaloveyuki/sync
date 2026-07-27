@@ -1,6 +1,13 @@
-supported_targets = "native"
+import {
+  "Nanaloveyuki/sync/atomic",
+  "Nanaloveyuki/sync/channel",
+  "Nanaloveyuki/sync/mutex",
+  "Nanaloveyuki/sync/once",
+  "Nanaloveyuki/sync/rwlock",
+  "Nanaloveyuki/sync/thread",
+  "Nanaloveyuki/sync/thread_pool",
+  "Nanaloveyuki/sync/types",
+  "Nanaloveyuki/sync/wait_group",
+}
 
-options(
-  "native-stub": [ "native.c" ],
-  targets: { "native.mbt": [ "native" ] },
-)
+supported_targets = "native"

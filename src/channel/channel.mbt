@@ -16,7 +16,7 @@ pub struct Receiver[T] {
 /// Creates a bounded MPSC channel. Capacity must be greater than zero.
 pub fn[T] bounded(capacity : Int) -> (Sender[T], Receiver[T]) raise SyncError {
   if capacity <= 0 {
-    raise InvalidCapacity(capacity)
+    raise SyncError::InvalidCapacity(capacity)
   }
   let sender = native_channel_new(capacity)
   let receiver = native_channel_receiver(sender)

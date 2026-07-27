@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/mutex"
+
+import {
+  "Nanaloveyuki/sync/types",
+  "moonbitlang/core/ref",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type Condvar
+pub fn Condvar::new() -> Self
+pub fn Condvar::notify_all(Self) -> Unit
+pub fn Condvar::notify_one(Self) -> Unit
+pub fn Condvar::share(Self) -> Self
+pub fn[T] Condvar::wait(Self, Mutex[T]) -> Unit
+
+pub struct Mutex[T] {
+  // private fields
+}
+pub fn[T] Mutex::new(T) -> Self[T]
+pub fn[T] Mutex::share(Self[T]) -> Self[T]
+pub fn[T, R] Mutex::with_lock(Self[T], (@ref.Ref[T]) -> R raise?) -> R raise?
+
+// Type aliases
+pub using @types {type SyncError}
+
+// Traits
+

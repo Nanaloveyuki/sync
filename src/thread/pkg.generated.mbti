@@ -1,0 +1,29 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/thread"
+
+import {
+  "Nanaloveyuki/sync/types",
+}
+
+// Values
+pub fn current_thread_id() -> UInt64
+
+pub fn[T] spawn(() -> T raise) -> Thread[T] raise @types.SyncError
+
+pub fn yield_now() -> Unit
+
+// Errors
+
+// Types and methods
+pub struct Thread[T] {
+  // private fields
+}
+pub fn[T] Thread::id(Self[T]) -> UInt64
+pub fn[T] Thread::join(Self[T]) -> T raise @types.SyncError
+pub fn[T] Thread::spawn(() -> T raise) -> Self[T] raise @types.SyncError
+
+// Type aliases
+pub using @types {type SyncError}
+
+// Traits
+

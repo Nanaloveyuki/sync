@@ -22,7 +22,7 @@ pub fn[T] spawn(task : () -> T raise) -> Thread[T] raise SyncError {
   }
   let status = native_thread_start(handle, fn(callback) { callback() }, runner)
   if status != 0 {
-    raise ThreadCreationFailed(status)
+    raise SyncError::ThreadCreationFailed(status)
   }
   { handle, marker: type_marker }
 }
@@ -43,12 +43,12 @@ pub fn[T] Thread::join(self : Thread[T]) -> T raise SyncError {
       let cell : Ref[ThreadOutcome[T]] = restore_box(raw)
       match cell.val {
         Returned(value) => value
-        Failed(message) => raise ThreadPanicked(message)
+        Failed(message) => raise SyncError::ThreadPanicked(message)
       }
     }
-    -1 => raise ThreadAlreadyJoined
-    -2 => raise ThreadJoinSelf
-    code => raise ThreadJoinFailed(code)
+    -1 => raise SyncError::ThreadAlreadyJoined
+    -2 => raise SyncError::ThreadJoinSelf
+    code => raise SyncError::ThreadJoinFailed(code)
   }
 }
 

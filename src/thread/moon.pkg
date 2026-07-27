@@ -1,0 +1,10 @@
+import {
+  "Nanaloveyuki/sync/types",
+}
+
+supported_targets = "native"
+
+options(
+  "native-stub": [ "native.c" ],
+  targets: { "native.mbt": [ "native" ] },
+)

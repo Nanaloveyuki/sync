@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/rwlock"
+
+import {
+  "Nanaloveyuki/sync/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type RwLock
+pub fn RwLock::new() -> Self raise @types.SyncError
+pub fn RwLock::share(Self) -> Self
+pub fn[R] RwLock::with_read(Self, () -> R raise?) -> R raise
+pub fn[R] RwLock::with_write(Self, () -> R raise?) -> R raise
+
+// Type aliases
+pub using @types {type SyncError}
+
+// Traits
+

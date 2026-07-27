@@ -61,6 +61,14 @@ jobs:
           moon check --target native --deny-warn
           moon test --target native --deny-warn
 
+      - name: Test feature packages independently
+        shell: bash
+        run: |
+          set -euo pipefail
+          for package in atomic mutex once wait_group rwlock thread channel thread_pool; do
+            moon test "src/$package" --target native --deny-warn
+          done
+
       - name: Check and test release profile
         shell: bash
         run: |
@@ -73,20 +81,29 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cc -std=c11 -Wall -Wextra -Werror -pthread \
-            -I "$HOME/.moon/include" \
-            -c src/native.c \
-            -o "$RUNNER_TEMP/sync-native.o"
+          while IFS= read -r source; do
+            feature="$(basename "$(dirname "$source")")"
+            cc -std=c11 -Wall -Wextra -Werror -pthread \
+              -I "$HOME/.moon/include" \
+              -c "$source" \
+              -o "$RUNNER_TEMP/sync-$feature.o"
+          done < <(find src -mindepth 2 -maxdepth 2 -name native.c -print | sort)
 
       - name: Compile C stub with strict warnings (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          clang -std=c11 -Wall -Wextra -Werror `
-            -I "$env:USERPROFILE\.moon\include" `
-            -c src/native.c `
-            -o "$env:RUNNER_TEMP\sync-native.obj"
+          Get-ChildItem src -Recurse -Filter native.c | ForEach-Object {
+            $feature = $_.Directory.Name
+            clang -std=c11 -Wall -Wextra -Werror `
+              -I "$env:USERPROFILE\.moon\include" `
+              -c $_.FullName `
+              -o "$env:RUNNER_TEMP\sync-$feature.obj"
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
 
       - name: Stress native concurrency paths
         shell: bash
