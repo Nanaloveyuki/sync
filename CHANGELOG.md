@@ -2,7 +2,7 @@
 
 All notable changes to `sync` are documented in this file.
 
-## Unreleased
+## 0.2.1
 
 - Bound owned-bytes channels by both per-message and aggregate queued-byte
   limits. The default limits are 4 MiB and 16 MiB respectively.
