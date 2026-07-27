@@ -18,6 +18,8 @@ pub fn[T] bounded(Int) -> (@channel.Sender[T], @channel.Receiver[T]) raise @type
 
 pub fn current_thread_id() -> UInt64
 
+pub fn owned_bytes_bounded(Int) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
+
 pub fn[T] spawn(() -> T raise) -> @thread.Thread[T] raise @types.SyncError
 
 pub fn yield_now() -> Unit
@@ -42,6 +44,14 @@ pub using @atomic {type MemoryOrdering}
 pub using @mutex {type Mutex}
 
 pub using @once {type Once}
+
+pub using @channel {type OwnedBytesReceiver}
+
+pub using @channel {type OwnedBytesSender}
+
+pub using @channel {type OwnedBytesTryRecvResult}
+
+pub using @channel {type OwnedBytesTrySendResult}
 
 pub using @channel {type Receiver}
 
