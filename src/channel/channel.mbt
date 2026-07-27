@@ -1,5 +1,9 @@
 ///|
 /// The producer side of a bounded MPSC channel.
+///
+/// This generic channel retains the submitted MoonBit value. Use it only when
+/// its payload is not aliased across OS threads. For serialized IPC work, use
+/// `owned_bytes_bounded`, which copies payloads through native-owned storage.
 pub struct Sender[T] {
   priv handle : SenderHandle
   priv marker : (T) -> T
@@ -14,6 +18,9 @@ pub struct Receiver[T] {
 
 ///|
 /// Creates a bounded MPSC channel. Capacity must be greater than zero.
+///
+/// Dropping the final sender closes the channel. Closing or dropping either
+/// endpoint wakes blocked senders and receivers.
 pub fn[T] bounded(capacity : Int) -> (Sender[T], Receiver[T]) raise SyncError {
   if capacity <= 0 {
     raise SyncError::InvalidCapacity(capacity)

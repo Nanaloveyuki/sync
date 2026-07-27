@@ -9,9 +9,40 @@ import {
 // Values
 pub fn[T] bounded(Int) -> (Sender[T], Receiver[T]) raise @types.SyncError
 
+pub fn owned_bytes_bounded(Int) -> (OwnedBytesSender, OwnedBytesReceiver) raise @types.SyncError
+
 // Errors
 
 // Types and methods
+pub struct OwnedBytesReceiver {
+  // private fields
+}
+pub fn OwnedBytesReceiver::capacity(Self) -> Int
+pub fn OwnedBytesReceiver::close(Self) -> Unit
+pub fn OwnedBytesReceiver::length(Self) -> Int
+pub fn OwnedBytesReceiver::recv(Self) -> Bytes?
+pub fn OwnedBytesReceiver::try_recv(Self) -> OwnedBytesTryRecvResult
+
+pub struct OwnedBytesSender {
+  // private fields
+}
+pub fn OwnedBytesSender::close(Self) -> Unit
+pub fn OwnedBytesSender::send(Self, Bytes) -> Bool
+pub fn OwnedBytesSender::share(Self) -> Self
+pub fn OwnedBytesSender::try_send(Self, Bytes) -> OwnedBytesTrySendResult
+
+pub(all) enum OwnedBytesTryRecvResult {
+  Received(Bytes)
+  Empty
+  Closed
+} derive(Eq, @debug.Debug)
+
+pub(all) enum OwnedBytesTrySendResult {
+  Sent
+  Full
+  Closed
+} derive(Eq, @debug.Debug)
+
 pub struct Receiver[T] {
   // private fields
 }

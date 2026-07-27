@@ -67,6 +67,18 @@ test "root facade preserves the public entry points" {
   sender.close()
   receiver.close()
 
+  let (owned_sender, owned_receiver) = @sync.owned_bytes_bounded(1)
+  let _shared_owned_sender = owned_sender.share()
+  assert_eq(owned_sender.try_send(b"safe"), @sync.OwnedBytesTrySendResult::Sent)
+  assert_eq(
+    owned_receiver.try_recv(),
+    @sync.OwnedBytesTryRecvResult::Received(b"safe"),
+  )
+  assert_true(owned_sender.send(b"again"))
+  assert_eq(owned_receiver.recv(), Some(b"again"))
+  owned_sender.close()
+  owned_receiver.close()
+
   let pool = @sync.ThreadPool::new(1, 1)
   let _shared_pool = pool.share()
   assert_eq(pool.worker_count(), 1)
