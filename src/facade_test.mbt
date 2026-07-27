@@ -79,6 +79,16 @@ test "root facade preserves the public entry points" {
   owned_sender.close()
   owned_receiver.close()
 
+  let (limited_sender, _limited_receiver) = @sync.owned_bytes_bounded_with_limits(
+    1,
+    max_message_bytes=4,
+    max_queued_bytes=4,
+  )
+  assert_eq(
+    limited_sender.send_checked(b"large"),
+    @sync.OwnedBytesSendResult::MessageTooLarge(5, 4),
+  )
+
   let pool = @sync.ThreadPool::new(1, 1)
   let _shared_pool = pool.share()
   assert_eq(pool.worker_count(), 1)

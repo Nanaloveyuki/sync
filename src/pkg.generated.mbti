@@ -20,6 +20,8 @@ pub fn current_thread_id() -> UInt64
 
 pub fn owned_bytes_bounded(Int) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
 
+pub fn owned_bytes_bounded_with_limits(Int, max_message_bytes~ : Int, max_queued_bytes~ : Int) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
+
 pub fn[T] spawn(() -> T raise) -> @thread.Thread[T] raise @types.SyncError
 
 pub fn yield_now() -> Unit
@@ -46,6 +48,8 @@ pub using @mutex {type Mutex}
 pub using @once {type Once}
 
 pub using @channel {type OwnedBytesReceiver}
+
+pub using @channel {type OwnedBytesSendResult}
 
 pub using @channel {type OwnedBytesSender}
 

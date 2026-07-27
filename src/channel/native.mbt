@@ -90,6 +90,8 @@ extern "C" fn native_receiver_capacity(value : ReceiverHandle) -> Int = "sync_re
 ///|
 extern "C" fn native_owned_bytes_channel_new(
   capacity : Int,
+  max_message_bytes : Int,
+  max_queued_bytes : Int,
 ) -> OwnedBytesSenderHandle = "sync_owned_bytes_channel_new"
 
 ///|

@@ -2,6 +2,15 @@
 
 All notable changes to `sync` are documented in this file.
 
+## Unreleased
+
+- Bound owned-bytes channels by both per-message and aggregate queued-byte
+  limits. The default limits are 4 MiB and 16 MiB respectively.
+- Add explicit configuration and rejection results for callers that need to
+  report oversized IPC payloads upstream.
+- Move owned-byte copies outside the channel mutex so large payloads do not
+  serialize queue operations while being copied.
+
 ## 0.2.0
 
 - Split the concurrency features into independently consumable MoonBit

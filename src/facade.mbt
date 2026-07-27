@@ -34,9 +34,11 @@ pub using @channel {
   type OwnedBytesSender,
   type OwnedBytesReceiver,
   type OwnedBytesTrySendResult,
+  type OwnedBytesSendResult,
   type OwnedBytesTryRecvResult,
   bounded,
   owned_bytes_bounded,
+  owned_bytes_bounded_with_limits,
 }
 
 ///|

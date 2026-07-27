@@ -220,6 +220,9 @@ typedef struct {
   sync_os_cond_t writable;
   sync_owned_bytes_message_t **slots;
   int32_t capacity;
+  int32_t max_message_bytes;
+  int32_t max_queued_bytes;
+  int32_t queued_bytes;
   int32_t head;
   int32_t tail;
   int32_t count;
@@ -242,9 +245,9 @@ static void sync_owned_bytes_message_release(sync_owned_bytes_message_t *message
 }
 
 static sync_owned_bytes_message_t *sync_owned_bytes_message_copy(
-  moonbit_bytes_t bytes
+  moonbit_bytes_t bytes,
+  int32_t length
 ) {
-  int32_t length = Moonbit_array_length(bytes);
   sync_owned_bytes_message_t *message = (sync_owned_bytes_message_t *)sync_alloc(
     sizeof(sync_owned_bytes_message_t)
   );
@@ -254,6 +257,13 @@ static sync_owned_bytes_message_t *sync_owned_bytes_message_copy(
     memcpy(message->data, bytes, (size_t)length);
   }
   return message;
+}
+
+static int32_t sync_owned_bytes_channel_has_byte_capacity(
+  sync_owned_bytes_channel_core_t *core,
+  int32_t message_length
+) {
+  return message_length <= core->max_queued_bytes - core->queued_bytes;
 }
 
 static moonbit_bytes_t sync_owned_bytes_message_into_moonbit(
@@ -325,13 +335,17 @@ static sync_owned_bytes_channel_handle_t *sync_owned_bytes_channel_wrap(
 }
 
 MOONBIT_FFI_EXPORT sync_owned_bytes_channel_handle_t *sync_owned_bytes_channel_new(
-  int32_t capacity
+  int32_t capacity,
+  int32_t max_message_bytes,
+  int32_t max_queued_bytes
 ) {
   sync_owned_bytes_channel_core_t *core = (
     sync_owned_bytes_channel_core_t *
   )sync_alloc(sizeof(sync_owned_bytes_channel_core_t));
   core->refs = 1;
   core->capacity = capacity;
+  core->max_message_bytes = max_message_bytes;
+  core->max_queued_bytes = max_queued_bytes;
   core->senders = 1;
   core->slots = (sync_owned_bytes_message_t **)sync_alloc(
     (size_t)capacity * sizeof(sync_owned_bytes_message_t *)
@@ -370,24 +384,53 @@ static int32_t sync_owned_bytes_channel_submit(
   int32_t block
 ) {
   sync_owned_bytes_channel_core_t *core = value->core;
-  sync_os_mutex_lock(&core->mutex);
-  while (block && core->count == core->capacity && !core->closed && core->receiver_alive) {
-    sync_os_cond_wait(&core->writable, &core->mutex);
-  }
-  if (core->closed || !core->receiver_alive) {
+  int32_t message_length = Moonbit_array_length(bytes);
+  sync_owned_bytes_message_t *message = NULL;
+
+  for (;;) {
+    sync_os_mutex_lock(&core->mutex);
+    if (message_length > core->max_message_bytes) {
+      sync_os_mutex_unlock(&core->mutex);
+      sync_owned_bytes_message_release(message);
+      return 3;
+    }
+    while (
+      block && !core->closed && core->receiver_alive
+      && (
+        core->count == core->capacity
+        || !sync_owned_bytes_channel_has_byte_capacity(core, message_length)
+      )
+    ) {
+      sync_os_cond_wait(&core->writable, &core->mutex);
+    }
+    if (core->closed || !core->receiver_alive) {
+      sync_os_mutex_unlock(&core->mutex);
+      sync_owned_bytes_message_release(message);
+      return 2;
+    }
+    if (core->count == core->capacity) {
+      sync_os_mutex_unlock(&core->mutex);
+      sync_owned_bytes_message_release(message);
+      return 1;
+    }
+    if (!sync_owned_bytes_channel_has_byte_capacity(core, message_length)) {
+      sync_os_mutex_unlock(&core->mutex);
+      sync_owned_bytes_message_release(message);
+      return 4;
+    }
+    if (message == NULL) {
+      sync_os_mutex_unlock(&core->mutex);
+      message = sync_owned_bytes_message_copy(bytes, message_length);
+      continue;
+    }
+    core->slots[core->tail] = message;
+    core->tail = (core->tail + 1) % core->capacity;
+    core->count += 1;
+    core->queued_bytes += message_length;
+    sync_os_cond_signal(&core->readable);
     sync_os_mutex_unlock(&core->mutex);
-    return 2;
+    return 0;
   }
-  if (core->count == core->capacity) {
-    sync_os_mutex_unlock(&core->mutex);
-    return 1;
-  }
-  core->slots[core->tail] = sync_owned_bytes_message_copy(bytes);
-  core->tail = (core->tail + 1) % core->capacity;
-  core->count += 1;
-  sync_os_cond_signal(&core->readable);
-  sync_os_mutex_unlock(&core->mutex);
-  return 0;
 }
 
 MOONBIT_FFI_EXPORT int32_t sync_owned_bytes_sender_try_send(
@@ -434,6 +477,7 @@ static moonbit_bytes_t sync_owned_bytes_channel_receive(
   core->slots[core->head] = NULL;
   core->head = (core->head + 1) % core->capacity;
   core->count -= 1;
+  core->queued_bytes -= message->length;
   *status = 0;
   sync_os_cond_signal(&core->writable);
   sync_os_mutex_unlock(&core->mutex);
