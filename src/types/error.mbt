@@ -2,6 +2,9 @@
 pub(all) suberror SyncError {
   InvalidMemoryOrdering(String)
   InvalidCapacity(Int)
+  InvalidMessageSizeLimit(Int)
+  InvalidQueuedByteLimit(Int)
+  InvalidOwnedBytesLimits
   InvalidWorkerCount(Int)
   InvalidWaitGroupCount
   RwLockInitializationFailed(Int)

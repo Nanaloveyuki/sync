@@ -11,6 +11,8 @@ pub fn[T] bounded(Int) -> (Sender[T], Receiver[T]) raise @types.SyncError
 
 pub fn owned_bytes_bounded(Int) -> (OwnedBytesSender, OwnedBytesReceiver) raise @types.SyncError
 
+pub fn owned_bytes_bounded_with_limits(Int, max_message_bytes~ : Int, max_queued_bytes~ : Int) -> (OwnedBytesSender, OwnedBytesReceiver) raise @types.SyncError
+
 // Errors
 
 // Types and methods
@@ -23,11 +25,18 @@ pub fn OwnedBytesReceiver::length(Self) -> Int
 pub fn OwnedBytesReceiver::recv(Self) -> Bytes?
 pub fn OwnedBytesReceiver::try_recv(Self) -> OwnedBytesTryRecvResult
 
+pub(all) enum OwnedBytesSendResult {
+  Sent
+  MessageTooLarge(Int, Int)
+  Closed
+} derive(Eq, @debug.Debug)
+
 pub struct OwnedBytesSender {
   // private fields
 }
 pub fn OwnedBytesSender::close(Self) -> Unit
 pub fn OwnedBytesSender::send(Self, Bytes) -> Bool
+pub fn OwnedBytesSender::send_checked(Self, Bytes) -> OwnedBytesSendResult
 pub fn OwnedBytesSender::share(Self) -> Self
 pub fn OwnedBytesSender::try_send(Self, Bytes) -> OwnedBytesTrySendResult
 
@@ -40,6 +49,8 @@ pub(all) enum OwnedBytesTryRecvResult {
 pub(all) enum OwnedBytesTrySendResult {
   Sent
   Full
+  QueueByteLimitReached(Int, Int)
+  MessageTooLarge(Int, Int)
   Closed
 } derive(Eq, @debug.Debug)
 

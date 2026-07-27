@@ -37,7 +37,8 @@ captured closures, between OS threads without an explicit ownership boundary.
 For serialized work such as IPC, use `owned_bytes_bounded`. It copies input
 bytes into native-owned storage before `send` returns and allocates a fresh
 `Bytes` value on `recv`; the channel does not retain a MoonBit heap alias from
-the sending thread.
+the sending thread. The default limits are 4 MiB per message and 16 MiB across
+all queued payloads.
 
 ```moonbit nocheck
 let (sender, receiver) = @sync.owned_bytes_bounded(32)
@@ -51,6 +52,27 @@ match receiver.recv() {
   None => ()
 }
 worker.join()
+```
+
+Use explicit limits when the IPC protocol has a tighter budget. Oversized
+messages are rejected before copying; `send_checked` returns the actual and
+allowed sizes so the caller can report the error upstream. `try_send` returns
+`QueueByteLimitReached(actual, maximum)` when accepting the message would
+exceed the total queued-byte limit.
+
+```moonbit nocheck
+let (sender, receiver) = @sync.owned_bytes_bounded_with_limits(
+  64,
+  max_message_bytes=1024 * 1024,
+  max_queued_bytes=8 * 1024 * 1024,
+)
+
+match sender.send_checked(payload) {
+  @sync.OwnedBytesSendResult::Sent => ()
+  @sync.OwnedBytesSendResult::MessageTooLarge(actual, maximum) =>
+    report_rejected_payload(actual, maximum)
+  @sync.OwnedBytesSendResult::Closed => ()
+}
 ```
 
 The generic bounded channel and `ThreadPool` are useful for narrowly controlled
