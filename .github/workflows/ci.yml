@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+
+      - name: Verify formatting and exported interfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          moon fmt --check
+          moon info
+          git diff --exit-code
+
+      - name: Check native package
+        shell: bash
+        run: moon check --target native --deny-warn
+
+  native:
+    name: Native (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+
+      - name: Check and test debug profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          moon check --target native --deny-warn
+          moon test --target native --deny-warn
+
+      - name: Check and test release profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          moon check --target native --release --deny-warn
+          moon test --target native --release --deny-warn
+
+      - name: Compile C stub with strict warnings (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cc -std=c11 -Wall -Wextra -Werror -pthread \
+            -I "$HOME/.moon/include" \
+            -c src/native.c \
+            -o "$RUNNER_TEMP/sync-native.o"
+
+      - name: Compile C stub with strict warnings (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          clang -std=c11 -Wall -Wextra -Werror `
+            -I "$env:USERPROFILE\.moon\include" `
+            -c src/native.c `
+            -o "$env:RUNNER_TEMP\sync-native.obj"
+
+      - name: Stress native concurrency paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          for iteration in {1..10}; do
+            moon test --target native --release --deny-warn --quiet
+          done
+
+  coverage:
+    name: Coverage (Ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+
+      - name: Collect native MoonBit coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          moon coverage clean
+          moon test --target native --deny-warn --enable-coverage
+          moon coverage report -f summary
+          moon coverage analyze
