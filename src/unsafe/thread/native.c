@@ -27,6 +27,9 @@ typedef struct {
   sync_thread_core_t *core;
 } sync_thread_handle_t;
 
+static int32_t sync_thread_test_next_start_error = 0;
+static int32_t sync_thread_test_next_join_error = 0;
+
 static void sync_thread_core_release(sync_thread_core_t *core) {
   if (sync_arc_dec(&core->refs) == 0) {
     if (core->task != NULL) {
@@ -104,6 +107,14 @@ MOONBIT_FFI_EXPORT int32_t sync_thread_start(
   core->call = call;
   core->task = task;
   sync_arc_inc(&core->refs);
+  if (sync_thread_test_next_start_error != 0) {
+    int32_t status = sync_thread_test_next_start_error;
+    sync_thread_test_next_start_error = 0;
+    core->task = NULL;
+    moonbit_decref(task);
+    sync_thread_core_release(core);
+    return status;
+  }
 #if defined(_WIN32)
   DWORD id = 0;
   core->thread = CreateThread(NULL, 0, sync_thread_main, core, 0, &id);
@@ -163,6 +174,12 @@ MOONBIT_FFI_EXPORT void *sync_thread_join(sync_thread_handle_t *value, int32_t *
     sync_os_mutex_unlock(&core->mutex);
     return NULL;
   }
+  if (sync_thread_test_next_join_error != 0) {
+    *status = sync_thread_test_next_join_error;
+    sync_thread_test_next_join_error = 0;
+    sync_os_mutex_unlock(&core->mutex);
+    return NULL;
+  }
   core->joined = 1;
   sync_os_mutex_unlock(&core->mutex);
 #if defined(_WIN32)
@@ -191,6 +208,14 @@ MOONBIT_FFI_EXPORT void *sync_thread_join(sync_thread_handle_t *value, int32_t *
   sync_os_mutex_unlock(&core->mutex);
   *status = 0;
   return result;
+}
+
+MOONBIT_FFI_EXPORT void sync_thread_test_fail_next_start(int32_t status) {
+  sync_thread_test_next_start_error = status;
+}
+
+MOONBIT_FFI_EXPORT void sync_thread_test_fail_next_join(int32_t status) {
+  sync_thread_test_next_join_error = status;
 }
 
 MOONBIT_FFI_EXPORT uint64_t sync_thread_id(sync_thread_handle_t *value) {

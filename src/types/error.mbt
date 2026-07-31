@@ -7,6 +7,8 @@ pub(all) suberror SyncError {
   InvalidOwnedBytesLimits
   InvalidWorkerCount(Int)
   InvalidWaitGroupCount
+  MutexInitializationFailed(Int)
+  CondvarInitializationFailed(Int)
   CondvarOperationFailed(Int)
   RwLockInitializationFailed(Int)
   RwLockOperationFailed(Int)

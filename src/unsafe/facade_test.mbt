@@ -6,7 +6,7 @@ test "unsafe facade exposes raw APIs explicitly" {
   assert_eq(sender.try_send(1), @unsafe.TrySendResult::Sent)
   assert_eq(receiver.recv(), Some(1))
 
-  let mutex = @unsafe.Mutex::new(1)
+  let mutex = try! @unsafe.Mutex::new(1)
   mutex.with_lock(fn(lock_guard) {
     lock_guard.with_value(fn(value) { value.val += 1 })
   })

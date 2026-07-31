@@ -13,16 +13,16 @@ pub fn[T] condvar_wait_unchecked(Condvar, Mutex[T]) -> Unit raise @types.SyncErr
 
 // Types and methods
 type Condvar
-pub fn Condvar::new() -> Self
-pub fn Condvar::notify_all(Self) -> Unit
-pub fn Condvar::notify_one(Self) -> Unit
+pub fn Condvar::new() -> Self raise @types.SyncError
+pub fn Condvar::notify_all(Self) -> Unit raise @types.SyncError
+pub fn Condvar::notify_one(Self) -> Unit raise @types.SyncError
 pub fn Condvar::share(Self) -> Self
 pub fn[T] Condvar::wait(Self, MutexGuard[T]) -> Unit raise @types.SyncError
 
 pub struct Mutex[T] {
   // private fields
 }
-pub fn[T] Mutex::new(T) -> Self[T]
+pub fn[T] Mutex::new(T) -> Self[T] raise @types.SyncError
 pub fn[T] Mutex::share(Self[T]) -> Self[T]
 pub fn[T, R] Mutex::with_lock(Self[T], (MutexGuard[T]) -> R raise?) -> R raise?
 

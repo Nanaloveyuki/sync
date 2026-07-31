@@ -10,20 +10,24 @@ typedef SRWLOCK sync_os_mutex_t;
 typedef SRWLOCK sync_os_rwlock_t;
 typedef CONDITION_VARIABLE sync_os_cond_t;
 
-static inline void sync_os_mutex_init(sync_os_mutex_t *mutex) {
+static inline int32_t sync_os_mutex_init(sync_os_mutex_t *mutex) {
   InitializeSRWLock(mutex);
+  return 0;
 }
 
-static inline void sync_os_mutex_destroy(sync_os_mutex_t *mutex) {
+static inline int32_t sync_os_mutex_destroy(sync_os_mutex_t *mutex) {
   (void)mutex;
+  return 0;
 }
 
-static inline void sync_os_mutex_lock(sync_os_mutex_t *mutex) {
+static inline int32_t sync_os_mutex_lock(sync_os_mutex_t *mutex) {
   AcquireSRWLockExclusive(mutex);
+  return 0;
 }
 
-static inline void sync_os_mutex_unlock(sync_os_mutex_t *mutex) {
+static inline int32_t sync_os_mutex_unlock(sync_os_mutex_t *mutex) {
   ReleaseSRWLockExclusive(mutex);
+  return 0;
 }
 
 static inline uint64_t sync_os_current_thread_id(void) {
@@ -59,12 +63,14 @@ static inline int32_t sync_os_rwlock_write_unlock(sync_os_rwlock_t *lock) {
   return 0;
 }
 
-static inline void sync_os_cond_init(sync_os_cond_t *cond) {
+static inline int32_t sync_os_cond_init(sync_os_cond_t *cond) {
   InitializeConditionVariable(cond);
+  return 0;
 }
 
-static inline void sync_os_cond_destroy(sync_os_cond_t *cond) {
+static inline int32_t sync_os_cond_destroy(sync_os_cond_t *cond) {
   (void)cond;
+  return 0;
 }
 
 static inline int32_t sync_os_cond_wait(sync_os_cond_t *cond, sync_os_mutex_t *mutex) {
@@ -74,12 +80,14 @@ static inline int32_t sync_os_cond_wait(sync_os_cond_t *cond, sync_os_mutex_t *m
   return (int32_t)GetLastError();
 }
 
-static inline void sync_os_cond_signal(sync_os_cond_t *cond) {
+static inline int32_t sync_os_cond_signal(sync_os_cond_t *cond) {
   WakeConditionVariable(cond);
+  return 0;
 }
 
-static inline void sync_os_cond_broadcast(sync_os_cond_t *cond) {
+static inline int32_t sync_os_cond_broadcast(sync_os_cond_t *cond) {
   WakeAllConditionVariable(cond);
+  return 0;
 }
 #else
 #include <pthread.h>
@@ -88,20 +96,20 @@ typedef pthread_mutex_t sync_os_mutex_t;
 typedef pthread_rwlock_t sync_os_rwlock_t;
 typedef pthread_cond_t sync_os_cond_t;
 
-static inline void sync_os_mutex_init(sync_os_mutex_t *mutex) {
-  (void)pthread_mutex_init(mutex, NULL);
+static inline int32_t sync_os_mutex_init(sync_os_mutex_t *mutex) {
+  return (int32_t)pthread_mutex_init(mutex, NULL);
 }
 
-static inline void sync_os_mutex_destroy(sync_os_mutex_t *mutex) {
-  (void)pthread_mutex_destroy(mutex);
+static inline int32_t sync_os_mutex_destroy(sync_os_mutex_t *mutex) {
+  return (int32_t)pthread_mutex_destroy(mutex);
 }
 
-static inline void sync_os_mutex_lock(sync_os_mutex_t *mutex) {
-  (void)pthread_mutex_lock(mutex);
+static inline int32_t sync_os_mutex_lock(sync_os_mutex_t *mutex) {
+  return (int32_t)pthread_mutex_lock(mutex);
 }
 
-static inline void sync_os_mutex_unlock(sync_os_mutex_t *mutex) {
-  (void)pthread_mutex_unlock(mutex);
+static inline int32_t sync_os_mutex_unlock(sync_os_mutex_t *mutex) {
+  return (int32_t)pthread_mutex_unlock(mutex);
 }
 
 static inline uint64_t sync_os_current_thread_id(void) {
@@ -135,24 +143,24 @@ static inline int32_t sync_os_rwlock_write_unlock(sync_os_rwlock_t *lock) {
   return (int32_t)pthread_rwlock_unlock(lock);
 }
 
-static inline void sync_os_cond_init(sync_os_cond_t *cond) {
-  (void)pthread_cond_init(cond, NULL);
+static inline int32_t sync_os_cond_init(sync_os_cond_t *cond) {
+  return (int32_t)pthread_cond_init(cond, NULL);
 }
 
-static inline void sync_os_cond_destroy(sync_os_cond_t *cond) {
-  (void)pthread_cond_destroy(cond);
+static inline int32_t sync_os_cond_destroy(sync_os_cond_t *cond) {
+  return (int32_t)pthread_cond_destroy(cond);
 }
 
 static inline int32_t sync_os_cond_wait(sync_os_cond_t *cond, sync_os_mutex_t *mutex) {
   return (int32_t)pthread_cond_wait(cond, mutex);
 }
 
-static inline void sync_os_cond_signal(sync_os_cond_t *cond) {
-  (void)pthread_cond_signal(cond);
+static inline int32_t sync_os_cond_signal(sync_os_cond_t *cond) {
+  return (int32_t)pthread_cond_signal(cond);
 }
 
-static inline void sync_os_cond_broadcast(sync_os_cond_t *cond) {
-  (void)pthread_cond_broadcast(cond);
+static inline int32_t sync_os_cond_broadcast(sync_os_cond_t *cond) {
+  return (int32_t)pthread_cond_broadcast(cond);
 }
 #endif
 
