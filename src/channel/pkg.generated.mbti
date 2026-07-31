@@ -18,10 +18,10 @@ pub struct OwnedBytesReceiver {
   // private fields
 }
 pub fn OwnedBytesReceiver::capacity(Self) -> Int
-pub fn OwnedBytesReceiver::close(Self) -> Unit
-pub fn OwnedBytesReceiver::length(Self) -> Int
-pub fn OwnedBytesReceiver::recv(Self) -> Bytes?
-pub fn OwnedBytesReceiver::try_recv(Self) -> OwnedBytesTryRecvResult
+pub fn OwnedBytesReceiver::close(Self) -> Unit raise @types.SyncError
+pub fn OwnedBytesReceiver::length(Self) -> Int raise @types.SyncError
+pub fn OwnedBytesReceiver::recv(Self) -> Bytes? raise @types.SyncError
+pub fn OwnedBytesReceiver::try_recv(Self) -> OwnedBytesTryRecvResult raise @types.SyncError
 
 pub(all) enum OwnedBytesSendResult {
   Sent
@@ -32,11 +32,11 @@ pub(all) enum OwnedBytesSendResult {
 pub struct OwnedBytesSender {
   // private fields
 }
-pub fn OwnedBytesSender::close(Self) -> Unit
-pub fn OwnedBytesSender::send(Self, Bytes) -> Bool
-pub fn OwnedBytesSender::send_checked(Self, Bytes) -> OwnedBytesSendResult
-pub fn OwnedBytesSender::share(Self) -> Self
-pub fn OwnedBytesSender::try_send(Self, Bytes) -> OwnedBytesTrySendResult
+pub fn OwnedBytesSender::close(Self) -> Unit raise @types.SyncError
+pub fn OwnedBytesSender::send(Self, Bytes) -> Bool raise @types.SyncError
+pub fn OwnedBytesSender::send_checked(Self, Bytes) -> OwnedBytesSendResult raise @types.SyncError
+pub fn OwnedBytesSender::share(Self) -> Self raise @types.SyncError
+pub fn OwnedBytesSender::try_send(Self, Bytes) -> OwnedBytesTrySendResult raise @types.SyncError
 
 pub(all) enum OwnedBytesTryRecvResult {
   Received(Bytes)

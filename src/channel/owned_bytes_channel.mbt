@@ -54,10 +54,18 @@ pub fn owned_bytes_bounded_with_limits(
   if max_message_bytes > max_queued_bytes {
     raise SyncError::InvalidOwnedBytesLimits
   }
+  let creation_status = Ref::Ref(0)
   let sender = native_owned_bytes_channel_new(
-    capacity, max_message_bytes, max_queued_bytes,
+    capacity, max_message_bytes, max_queued_bytes, creation_status,
   )
-  let receiver = native_owned_bytes_channel_receiver(sender)
+  if creation_status.val != 0 {
+    raise SyncError::ChannelInitializationFailed(creation_status.val)
+  }
+  let receiver_status = Ref::Ref(0)
+  let receiver = native_owned_bytes_channel_receiver(sender, receiver_status)
+  if receiver_status.val != 0 {
+    raise SyncError::ChannelOperationFailed(receiver_status.val)
+  }
   (
     { handle: sender, max_message_bytes, max_queued_bytes },
     { handle: receiver },
@@ -66,9 +74,16 @@ pub fn owned_bytes_bounded_with_limits(
 
 ///|
 /// Creates an independent producer wrapper for a different OS thread.
-pub fn OwnedBytesSender::share(self : OwnedBytesSender) -> OwnedBytesSender {
+pub fn OwnedBytesSender::share(
+  self : OwnedBytesSender,
+) -> OwnedBytesSender raise SyncError {
+  let status = Ref::Ref(0)
+  let handle = native_owned_bytes_sender_share(self.handle, status)
+  if status.val != 0 {
+    raise SyncError::ChannelOperationFailed(status.val)
+  }
   {
-    handle: native_owned_bytes_sender_share(self.handle),
+    handle,
     max_message_bytes: self.max_message_bytes,
     max_queued_bytes: self.max_queued_bytes,
   }
@@ -79,8 +94,13 @@ pub fn OwnedBytesSender::share(self : OwnedBytesSender) -> OwnedBytesSender {
 pub fn OwnedBytesSender::try_send(
   self : OwnedBytesSender,
   message : Bytes,
-) -> OwnedBytesTrySendResult {
-  match native_owned_bytes_sender_try_send(self.handle, message) {
+) -> OwnedBytesTrySendResult raise SyncError {
+  let status = Ref::Ref(0)
+  let result = native_owned_bytes_sender_try_send(self.handle, message, status)
+  if status.val != 0 {
+    raise SyncError::ChannelOperationFailed(status.val)
+  }
+  match result {
     0 => Sent
     1 => Full
     2 => Closed
@@ -94,7 +114,10 @@ pub fn OwnedBytesSender::try_send(
 ///
 /// Returns false when the channel closes or rejects an oversized message.
 /// Use `send_checked` when the caller must distinguish these outcomes.
-pub fn OwnedBytesSender::send(self : OwnedBytesSender, message : Bytes) -> Bool {
+pub fn OwnedBytesSender::send(
+  self : OwnedBytesSender,
+  message : Bytes,
+) -> Bool raise SyncError {
   match self.send_checked(message) {
     Sent => true
     _ => false
@@ -107,8 +130,13 @@ pub fn OwnedBytesSender::send(self : OwnedBytesSender, message : Bytes) -> Bool 
 pub fn OwnedBytesSender::send_checked(
   self : OwnedBytesSender,
   message : Bytes,
-) -> OwnedBytesSendResult {
-  match native_owned_bytes_sender_send(self.handle, message) {
+) -> OwnedBytesSendResult raise SyncError {
+  let status = Ref::Ref(0)
+  let result = native_owned_bytes_sender_send(self.handle, message, status)
+  if status.val != 0 {
+    raise SyncError::ChannelOperationFailed(status.val)
+  }
+  match result {
     0 => Sent
     3 => MessageTooLarge(message.length(), self.max_message_bytes)
     _ => Closed
@@ -117,17 +145,25 @@ pub fn OwnedBytesSender::send_checked(
 
 ///|
 /// Idempotently closes the channel and wakes blocked endpoints.
-pub fn OwnedBytesSender::close(self : OwnedBytesSender) -> Unit {
-  native_owned_bytes_sender_close(self.handle)
+pub fn OwnedBytesSender::close(self : OwnedBytesSender) -> Unit raise SyncError {
+  let status = Ref::Ref(0)
+  native_owned_bytes_sender_close(self.handle, status)
+  if status.val != 0 {
+    raise SyncError::ChannelOperationFailed(status.val)
+  }
 }
 
 ///|
 /// Attempts to receive without blocking.
 pub fn OwnedBytesReceiver::try_recv(
   self : OwnedBytesReceiver,
-) -> OwnedBytesTryRecvResult {
+) -> OwnedBytesTryRecvResult raise SyncError {
   let status = Ref::Ref(0)
-  let raw = native_owned_bytes_receiver_try_recv(self.handle, status)
+  let error = Ref::Ref(0)
+  let raw = native_owned_bytes_receiver_try_recv(self.handle, status, error)
+  if error.val != 0 {
+    raise SyncError::ChannelOperationFailed(error.val)
+  }
   match status.val {
     0 => Received(restore_bytes(raw))
     1 => Empty
@@ -137,9 +173,15 @@ pub fn OwnedBytesReceiver::try_recv(
 
 ///|
 /// Blocks for a copied message, returning None after closure and queue drain.
-pub fn OwnedBytesReceiver::recv(self : OwnedBytesReceiver) -> Bytes? {
+pub fn OwnedBytesReceiver::recv(
+  self : OwnedBytesReceiver,
+) -> Bytes? raise SyncError {
   let status = Ref::Ref(0)
-  let raw = native_owned_bytes_receiver_recv(self.handle, status)
+  let error = Ref::Ref(0)
+  let raw = native_owned_bytes_receiver_recv(self.handle, status, error)
+  if error.val != 0 {
+    raise SyncError::ChannelOperationFailed(error.val)
+  }
   if status.val == 0 {
     Some(restore_bytes(raw))
   } else {
@@ -149,14 +191,27 @@ pub fn OwnedBytesReceiver::recv(self : OwnedBytesReceiver) -> Bytes? {
 
 ///|
 /// Idempotently closes the channel and wakes blocked endpoints.
-pub fn OwnedBytesReceiver::close(self : OwnedBytesReceiver) -> Unit {
-  native_owned_bytes_receiver_close(self.handle)
+pub fn OwnedBytesReceiver::close(
+  self : OwnedBytesReceiver,
+) -> Unit raise SyncError {
+  let status = Ref::Ref(0)
+  native_owned_bytes_receiver_close(self.handle, status)
+  if status.val != 0 {
+    raise SyncError::ChannelOperationFailed(status.val)
+  }
 }
 
 ///|
 /// Returns the number of copied messages waiting to be received.
-pub fn OwnedBytesReceiver::length(self : OwnedBytesReceiver) -> Int {
-  native_owned_bytes_receiver_len(self.handle)
+pub fn OwnedBytesReceiver::length(
+  self : OwnedBytesReceiver,
+) -> Int raise SyncError {
+  let status = Ref::Ref(0)
+  let length = native_owned_bytes_receiver_len(self.handle, status)
+  if status.val != 0 {
+    raise SyncError::ChannelOperationFailed(status.val)
+  }
+  length
 }
 
 ///|

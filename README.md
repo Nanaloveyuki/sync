@@ -7,7 +7,7 @@ it is not an async runtime or a UI-thread dispatcher.
 ## Install
 
 ```sh
-moon add Nanaloveyuki/sync@0.3.0
+moon add Nanaloveyuki/sync@0.4.0
 ```
 
 Import the root facade from a consumer package:
@@ -49,13 +49,13 @@ import {
   "Nanaloveyuki/sync/unsafe",
 }
 
-let (sender, receiver) = @sync.owned_bytes_bounded(32)
-let worker_sender = sender.share()
-let worker = @unsafe.spawn(fn() {
+let (sender, receiver) = try! @sync.owned_bytes_bounded(32)
+let worker_sender = try! sender.share()
+let worker = try! @unsafe.spawn(fn() raise {
   ignore(worker_sender.send(b"serialized request"))
 })
 
-match receiver.recv() {
+match try! receiver.recv() {
   Some(payload) => handle_ipc(payload)
   None => ()
 }
@@ -69,13 +69,13 @@ allowed sizes so the caller can report the error upstream. `try_send` returns
 exceed the total queued-byte limit.
 
 ```moonbit nocheck
-let (sender, receiver) = @sync.owned_bytes_bounded_with_limits(
+let (sender, receiver) = try! @sync.owned_bytes_bounded_with_limits(
   64,
   max_message_bytes=1024 * 1024,
   max_queued_bytes=8 * 1024 * 1024,
 )
 
-match sender.send_checked(payload) {
+match try! sender.send_checked(payload) {
   @sync.OwnedBytesSendResult::Sent => ()
   @sync.OwnedBytesSendResult::MessageTooLarge(actual, maximum) =>
     report_rejected_payload(actual, maximum)
@@ -86,6 +86,16 @@ match sender.send_checked(payload) {
 `sync/unsafe` contains the generic bounded channel, generic mutex, threads,
 and thread pools. They remain useful for narrowly controlled native work, but
 are not a safe transfer boundary for IPC payloads or arbitrary closures.
+
+## 0.4 Migration
+
+`0.4.0` makes native channel failures explicit. Constructors and operations
+that enter the channel synchronization state now raise `SyncError`; handle
+them with normal MoonBit error propagation or `try!` where aborting is the
+right policy. This applies to `share`, `try_send`, `send`, `send_checked`,
+`try_recv`, `recv`, `close`, and `length` on both the root `OwnedBytes` and
+`unsafe` generic channel APIs. Their existing result enums still describe
+ordinary queue outcomes, not OS failures.
 
 ## 0.3 Migration
 
