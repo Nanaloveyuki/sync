@@ -52,11 +52,12 @@ MOONBIT_FFI_EXPORT int32_t sync_wait_group_add(
 ) {
   sync_wait_group_core_t *core = value->core;
   sync_os_mutex_lock(&core->mutex);
-  if (delta < 0 && core->count < -delta) {
+  int64_t next = (int64_t)core->count + (int64_t)delta;
+  if (next < 0 || next > INT32_MAX) {
     sync_os_mutex_unlock(&core->mutex);
     return 0;
   }
-  core->count += delta;
+  core->count = (int32_t)next;
   if (core->count == 0) {
     sync_os_cond_broadcast(&core->cond);
   }

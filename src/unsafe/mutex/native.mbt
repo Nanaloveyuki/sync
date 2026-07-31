@@ -52,7 +52,7 @@ extern "C" fn native_condvar_share(value : Condvar) -> Condvar = "sync_condvar_s
 
 ///|
 #borrow(value, mutex)
-extern "C" fn native_condvar_wait(value : Condvar, mutex : MutexHandle) -> Unit = "sync_condvar_wait"
+extern "C" fn native_condvar_wait(value : Condvar, mutex : MutexHandle) -> Int = "sync_condvar_wait"
 
 ///|
 #borrow(value)

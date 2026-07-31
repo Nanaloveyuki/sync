@@ -1,9 +1,11 @@
-#include "../internal/native_sync.h"
+#include "../../internal/native_sync.h"
 
 typedef struct {
   sync_arc_t refs;
   sync_os_mutex_t mutex;
   void *value;
+  uint64_t owner;
+  int32_t locked;
 } sync_mutex_core_t;
 
 typedef struct {
@@ -45,12 +47,16 @@ MOONBIT_FFI_EXPORT sync_mutex_handle_t *sync_mutex_share(sync_mutex_handle_t *va
 
 MOONBIT_FFI_EXPORT void *sync_mutex_lock_get(sync_mutex_handle_t *value) {
   sync_os_mutex_lock(&value->core->mutex);
+  value->core->owner = sync_os_current_thread_id();
+  value->core->locked = 1;
   moonbit_incref(value->core->value);
   return value->core->value;
 }
 
 MOONBIT_FFI_EXPORT void sync_mutex_release_unlock(sync_mutex_handle_t *value, void *box) {
   moonbit_decref(box);
+  value->core->locked = 0;
+  value->core->owner = 0;
   sync_os_mutex_unlock(&value->core->mutex);
 }
 
@@ -92,11 +98,20 @@ MOONBIT_FFI_EXPORT sync_cond_handle_t *sync_condvar_share(sync_cond_handle_t *va
   return sync_cond_wrap(value->core);
 }
 
-MOONBIT_FFI_EXPORT void sync_condvar_wait(
+MOONBIT_FFI_EXPORT int32_t sync_condvar_wait(
   sync_cond_handle_t *value,
   sync_mutex_handle_t *mutex
 ) {
-  sync_os_cond_wait(&value->core->cond, &mutex->core->mutex);
+  sync_mutex_core_t *mutex_core = mutex->core;
+  if (!mutex_core->locked || mutex_core->owner != sync_os_current_thread_id()) {
+    return -1;
+  }
+  int32_t status = sync_os_cond_wait(&value->core->cond, &mutex_core->mutex);
+  if (status == 0) {
+    mutex_core->owner = sync_os_current_thread_id();
+    mutex_core->locked = 1;
+  }
+  return status;
 }
 
 MOONBIT_FFI_EXPORT void sync_condvar_notify_one(sync_cond_handle_t *value) {

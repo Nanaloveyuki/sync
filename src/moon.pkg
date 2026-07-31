@@ -1,11 +1,8 @@
 import {
   "Nanaloveyuki/sync/atomic",
   "Nanaloveyuki/sync/channel",
-  "Nanaloveyuki/sync/mutex",
   "Nanaloveyuki/sync/once",
   "Nanaloveyuki/sync/rwlock",
-  "Nanaloveyuki/sync/thread",
-  "Nanaloveyuki/sync/thread_pool",
   "Nanaloveyuki/sync/types",
   "Nanaloveyuki/sync/wait_group",
 }

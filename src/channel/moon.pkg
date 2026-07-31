@@ -3,7 +3,7 @@ import {
 }
 
 import {
-  "Nanaloveyuki/sync/thread",
+  "Nanaloveyuki/sync/unsafe/thread",
 } for "wbtest"
 
 supported_targets = "native"

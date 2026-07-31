@@ -4,27 +4,16 @@ package "Nanaloveyuki/sync"
 import {
   "Nanaloveyuki/sync/atomic",
   "Nanaloveyuki/sync/channel",
-  "Nanaloveyuki/sync/mutex",
   "Nanaloveyuki/sync/once",
   "Nanaloveyuki/sync/rwlock",
-  "Nanaloveyuki/sync/thread",
-  "Nanaloveyuki/sync/thread_pool",
   "Nanaloveyuki/sync/types",
   "Nanaloveyuki/sync/wait_group",
 }
 
 // Values
-pub fn[T] bounded(Int) -> (@channel.Sender[T], @channel.Receiver[T]) raise @types.SyncError
-
-pub fn current_thread_id() -> UInt64
-
 pub fn owned_bytes_bounded(Int) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
 
 pub fn owned_bytes_bounded_with_limits(Int, max_message_bytes~ : Int, max_queued_bytes~ : Int) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
-
-pub fn[T] spawn(() -> T raise) -> @thread.Thread[T] raise @types.SyncError
-
-pub fn yield_now() -> Unit
 
 // Errors
 
@@ -39,11 +28,7 @@ pub using @atomic {type AtomicUInt}
 
 pub using @atomic {type CompareExchangeResult}
 
-pub using @mutex {type Condvar}
-
 pub using @atomic {type MemoryOrdering}
-
-pub using @mutex {type Mutex}
 
 pub using @once {type Once}
 
@@ -57,23 +42,9 @@ pub using @channel {type OwnedBytesTryRecvResult}
 
 pub using @channel {type OwnedBytesTrySendResult}
 
-pub using @channel {type Receiver}
-
 pub using @rwlock {type RwLock}
 
-pub using @channel {type Sender}
-
 pub using @types {type SyncError}
-
-pub using @thread {type Thread}
-
-pub using @thread_pool {type ThreadPool}
-
-pub using @thread_pool {type TryExecuteResult}
-
-pub using @channel {type TryRecvResult}
-
-pub using @channel {type TrySendResult}
 
 pub using @wait_group {type WaitGroup}
 
