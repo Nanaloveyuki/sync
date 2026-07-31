@@ -16,18 +16,18 @@ pub struct Receiver[T] {
   // private fields
 }
 pub fn[T] Receiver::capacity(Self[T]) -> Int
-pub fn[T] Receiver::close(Self[T]) -> Unit
-pub fn[T] Receiver::length(Self[T]) -> Int
-pub fn[T] Receiver::recv(Self[T]) -> T?
-pub fn[T] Receiver::try_recv(Self[T]) -> TryRecvResult[T]
+pub fn[T] Receiver::close(Self[T]) -> Unit raise @types.SyncError
+pub fn[T] Receiver::length(Self[T]) -> Int raise @types.SyncError
+pub fn[T] Receiver::recv(Self[T]) -> T? raise @types.SyncError
+pub fn[T] Receiver::try_recv(Self[T]) -> TryRecvResult[T] raise @types.SyncError
 
 pub struct Sender[T] {
   // private fields
 }
-pub fn[T] Sender::close(Self[T]) -> Unit
-pub fn[T] Sender::send(Self[T], T) -> Result[Unit, T]
-pub fn[T] Sender::share(Self[T]) -> Self[T]
-pub fn[T] Sender::try_send(Self[T], T) -> TrySendResult[T]
+pub fn[T] Sender::close(Self[T]) -> Unit raise @types.SyncError
+pub fn[T] Sender::send(Self[T], T) -> Result[Unit, T] raise @types.SyncError
+pub fn[T] Sender::share(Self[T]) -> Self[T] raise @types.SyncError
+pub fn[T] Sender::try_send(Self[T], T) -> TrySendResult[T] raise @types.SyncError
 
 pub(all) enum TryRecvResult[T] {
   Received(T)

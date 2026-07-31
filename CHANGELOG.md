@@ -2,6 +2,18 @@
 
 All notable changes to `sync` are documented in this file.
 
+## 0.4.0
+
+### Breaking
+
+- Make construction and every stateful operation of both channel APIs raise
+  `SyncError` when the native mutex or condition-variable operation fails.
+  `ChannelInitializationFailed` identifies channel setup failures and
+  `ChannelOperationFailed` identifies failures while sharing, sending,
+  receiving, closing, or reading the queued length. The existing channel
+  result enums still represent only normal full, empty, closed, and byte-limit
+  outcomes.
+
 ## 0.3.0
 
 ### Breaking

@@ -1,4 +1,10 @@
 ///|
+extern "C" fn native_channel_test_fail_next_init(status : Int) -> Unit = "sync_channel_test_fail_next_init"
+
+///|
+extern "C" fn native_channel_test_fail_next_operation(status : Int) -> Unit = "sync_channel_test_fail_next_operation"
+
+///|
 test "bounded channel reports full empty and closed" {
   let (sender, receiver) : (Sender[Int], Receiver[Int]) = bounded(1)
   assert_eq(sender.try_send(7), Sent)
@@ -42,4 +48,26 @@ test "bounded channel supports multiple producers" {
   first.join()
   second.join()
   assert_eq(sum, 19900)
+}
+
+///|
+test "bounded channel maps injected native failures" {
+  native_channel_test_fail_next_init(345)
+  try {
+    let _ : (Sender[Int], Receiver[Int]) = bounded(1)
+    fail("injected initialization failure should raise")
+  } catch {
+    SyncError::ChannelInitializationFailed(345) => ()
+    _ => fail("unexpected error")
+  }
+
+  let (sender, _receiver) : (Sender[Int], Receiver[Int]) = try! bounded(1)
+  native_channel_test_fail_next_operation(456)
+  try {
+    ignore(sender.try_send(1))
+    fail("injected operation failure should raise")
+  } catch {
+    SyncError::ChannelOperationFailed(456) => ()
+    _ => fail("unexpected error")
+  }
 }
