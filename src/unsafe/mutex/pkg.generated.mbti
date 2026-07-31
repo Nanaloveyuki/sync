@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Nanaloveyuki/sync/mutex"
+package "Nanaloveyuki/sync/unsafe/mutex"
 
 import {
   "Nanaloveyuki/sync/types",
@@ -7,6 +7,7 @@ import {
 }
 
 // Values
+pub fn[T] condvar_wait_unchecked(Condvar, Mutex[T]) -> Unit raise @types.SyncError
 
 // Errors
 
@@ -16,14 +17,19 @@ pub fn Condvar::new() -> Self
 pub fn Condvar::notify_all(Self) -> Unit
 pub fn Condvar::notify_one(Self) -> Unit
 pub fn Condvar::share(Self) -> Self
-pub fn[T] Condvar::wait(Self, Mutex[T]) -> Unit
+pub fn[T] Condvar::wait(Self, MutexGuard[T]) -> Unit raise @types.SyncError
 
 pub struct Mutex[T] {
   // private fields
 }
 pub fn[T] Mutex::new(T) -> Self[T]
 pub fn[T] Mutex::share(Self[T]) -> Self[T]
-pub fn[T, R] Mutex::with_lock(Self[T], (@ref.Ref[T]) -> R raise?) -> R raise?
+pub fn[T, R] Mutex::with_lock(Self[T], (MutexGuard[T]) -> R raise?) -> R raise?
+
+pub struct MutexGuard[T] {
+  // private fields
+}
+pub fn[T, R] MutexGuard::with_value(Self[T], (@ref.Ref[T]) -> R raise?) -> R raise?
 
 // Type aliases
 pub using @types {type SyncError}

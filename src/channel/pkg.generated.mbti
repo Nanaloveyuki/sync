@@ -7,8 +7,6 @@ import {
 }
 
 // Values
-pub fn[T] bounded(Int) -> (Sender[T], Receiver[T]) raise @types.SyncError
-
 pub fn owned_bytes_bounded(Int) -> (OwnedBytesSender, OwnedBytesReceiver) raise @types.SyncError
 
 pub fn owned_bytes_bounded_with_limits(Int, max_message_bytes~ : Int, max_queued_bytes~ : Int) -> (OwnedBytesSender, OwnedBytesReceiver) raise @types.SyncError
@@ -52,35 +50,6 @@ pub(all) enum OwnedBytesTrySendResult {
   QueueByteLimitReached(Int, Int)
   MessageTooLarge(Int, Int)
   Closed
-} derive(Eq, @debug.Debug)
-
-pub struct Receiver[T] {
-  // private fields
-}
-pub fn[T] Receiver::capacity(Self[T]) -> Int
-pub fn[T] Receiver::close(Self[T]) -> Unit
-pub fn[T] Receiver::length(Self[T]) -> Int
-pub fn[T] Receiver::recv(Self[T]) -> T?
-pub fn[T] Receiver::try_recv(Self[T]) -> TryRecvResult[T]
-
-pub struct Sender[T] {
-  // private fields
-}
-pub fn[T] Sender::close(Self[T]) -> Unit
-pub fn[T] Sender::send(Self[T], T) -> Result[Unit, T]
-pub fn[T] Sender::share(Self[T]) -> Self[T]
-pub fn[T] Sender::try_send(Self[T], T) -> TrySendResult[T]
-
-pub(all) enum TryRecvResult[T] {
-  Received(T)
-  Empty
-  Closed
-} derive(Eq, @debug.Debug)
-
-pub(all) enum TrySendResult[T] {
-  Sent
-  Full(T)
-  Closed(T)
 } derive(Eq, @debug.Debug)
 
 // Type aliases

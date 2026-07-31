@@ -1,0 +1,51 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Nanaloveyuki/sync/unsafe"
+
+import {
+  "Nanaloveyuki/sync/types",
+  "Nanaloveyuki/sync/unsafe/channel",
+  "Nanaloveyuki/sync/unsafe/mutex",
+  "Nanaloveyuki/sync/unsafe/thread",
+  "Nanaloveyuki/sync/unsafe/thread_pool",
+}
+
+// Values
+pub fn[T] bounded(Int) -> (@channel.Sender[T], @channel.Receiver[T]) raise @types.SyncError
+
+pub fn[T] condvar_wait_unchecked(@mutex.Condvar, @mutex.Mutex[T]) -> Unit raise @types.SyncError
+
+pub fn current_thread_id() -> UInt64
+
+pub fn[T] spawn(() -> T raise) -> @thread.Thread[T] raise @types.SyncError
+
+pub fn yield_now() -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @mutex {type Condvar}
+
+pub using @mutex {type Mutex}
+
+pub using @mutex {type MutexGuard}
+
+pub using @channel {type Receiver}
+
+pub using @channel {type Sender}
+
+pub using @types {type SyncError}
+
+pub using @thread {type Thread}
+
+pub using @thread_pool {type ThreadPool}
+
+pub using @thread_pool {type TryExecuteResult}
+
+pub using @channel {type TryRecvResult}
+
+pub using @channel {type TrySendResult}
+
+// Traits
+

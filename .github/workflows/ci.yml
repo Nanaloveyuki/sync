@@ -65,7 +65,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for package in atomic mutex once wait_group rwlock thread channel thread_pool; do
+          for package in atomic once wait_group rwlock channel unsafe/mutex unsafe/thread unsafe/channel unsafe/thread_pool; do
             moon test "src/$package" --target native --deny-warn
           done
 
@@ -87,7 +87,7 @@ jobs:
               -I "$HOME/.moon/include" \
               -c "$source" \
               -o "$RUNNER_TEMP/sync-$feature.o"
-          done < <(find src -mindepth 2 -maxdepth 2 -name native.c -print | sort)
+          done < <(find src -mindepth 2 -name native.c -print | sort)
 
       - name: Compile C stub with strict warnings (Windows)
         if: runner.os == 'Windows'

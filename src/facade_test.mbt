@@ -16,12 +16,7 @@ test "root facade preserves the public entry points" {
   value.store(1)
   assert_eq(value.swap(2), 1)
   assert_true(value.compare_exchange(2, 3).exchanged)
-  let worker_value = value.share()
-  let worker = @sync.spawn(fn() {
-    ignore(worker_value.fetch_add(1, order=@sync.MemoryOrdering::Relaxed))
-  })
-  ignore(worker.id())
-  worker.join()
+  assert_eq(value.fetch_add(1, order=@sync.MemoryOrdering::Relaxed), 3)
   assert_eq(value.load(), 4)
 
   let unsigned = @sync.AtomicUInt::new(1U)
@@ -29,15 +24,6 @@ test "root facade preserves the public entry points" {
   assert_eq(unsigned.swap(3U), 2U)
   assert_true(unsigned.compare_exchange(3U, 4U).exchanged)
   assert_eq(unsigned.fetch_add(1U), 4U)
-
-  let mutex = @sync.Mutex::new(1)
-  let _shared_mutex = mutex.share()
-  mutex.with_lock(fn(cell) { cell.val += 1 })
-  assert_eq(mutex.with_lock(fn(cell) { cell.val }), 2)
-  let cond = @sync.Condvar::new()
-  let _shared_cond = cond.share()
-  cond.notify_one()
-  cond.notify_all()
 
   let once = @sync.Once::new()
   let _shared_once = once.share()
@@ -53,19 +39,6 @@ test "root facade preserves the public entry points" {
   let _shared_rwlock = rwlock.share()
   assert_eq(rwlock.with_write(fn() { 1 }), 1)
   assert_eq(rwlock.with_read(fn() { 2 }), 2)
-
-  let (sender, receiver) : (@sync.Sender[Int], @sync.Receiver[Int]) = @sync.bounded(
-    2,
-  )
-  let _shared_sender = sender.share()
-  assert_eq(sender.try_send(42), @sync.TrySendResult::Sent)
-  assert_eq(receiver.try_recv(), @sync.TryRecvResult::Received(42))
-  assert_eq(sender.send(7), Ok(()))
-  assert_eq(receiver.recv(), Some(7))
-  assert_eq(receiver.length(), 0)
-  assert_eq(receiver.capacity(), 2)
-  sender.close()
-  receiver.close()
 
   let (owned_sender, owned_receiver) = @sync.owned_bytes_bounded(1)
   let _shared_owned_sender = owned_sender.share()
@@ -88,17 +61,4 @@ test "root facade preserves the public entry points" {
     limited_sender.send_checked(b"large"),
     @sync.OwnedBytesSendResult::MessageTooLarge(5, 4),
   )
-
-  let pool = @sync.ThreadPool::new(1, 1)
-  let _shared_pool = pool.share()
-  assert_eq(pool.worker_count(), 1)
-  assert_false(pool.is_closed())
-  pool.execute(fn() {  })
-  ignore(pool.try_execute(fn() {  }))
-  ignore(pool.pending_count())
-  pool.close()
-  pool.shutdown()
-
-  @sync.yield_now()
-  assert_true(@sync.current_thread_id() != 0UL)
 }

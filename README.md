@@ -7,7 +7,7 @@ it is not an async runtime or a UI-thread dispatcher.
 ## Install
 
 ```sh
-moon add Nanaloveyuki/sync@0.2.0
+moon add Nanaloveyuki/sync@0.3.0
 ```
 
 Import the root facade from a consumer package:
@@ -17,6 +17,10 @@ import {
   "Nanaloveyuki/sync",
 }
 ```
+
+The root facade intentionally contains only native handles and the copied
+`OwnedBytes` message path. Import `Nanaloveyuki/sync/unsafe` explicitly for
+OS-thread spawning, generic channels, generic mutexes, or thread pools.
 
 ## Platform Support
 
@@ -41,9 +45,13 @@ the sending thread. The default limits are 4 MiB per message and 16 MiB across
 all queued payloads.
 
 ```moonbit nocheck
+import {
+  "Nanaloveyuki/sync/unsafe",
+}
+
 let (sender, receiver) = @sync.owned_bytes_bounded(32)
 let worker_sender = sender.share()
-let worker = @sync.spawn(fn() {
+let worker = @unsafe.spawn(fn() {
   ignore(worker_sender.send(b"serialized request"))
 })
 
@@ -75,18 +83,33 @@ match sender.send_checked(payload) {
 }
 ```
 
-The generic bounded channel and `ThreadPool` are useful for narrowly controlled
-native work, but are not a safe transfer boundary for IPC payloads or arbitrary
-closures.
+`sync/unsafe` contains the generic bounded channel, generic mutex, threads,
+and thread pools. They remain useful for narrowly controlled native work, but
+are not a safe transfer boundary for IPC payloads or arbitrary closures.
+
+## 0.3 Migration
+
+`0.3.0` deliberately moves raw APIs behind an explicit import:
+
+| Before | 0.3.0 |
+| --- | --- |
+| `@sync.spawn`, `@sync.Thread`, `@sync.ThreadPool` | `@unsafe.spawn`, `@unsafe.Thread`, `@unsafe.ThreadPool` |
+| `@sync.bounded`, `@sync.Sender`, `@sync.Receiver` | `@unsafe.bounded`, `@unsafe.Sender`, `@unsafe.Receiver` |
+| `@sync.Mutex`, `@sync.Condvar` | `@unsafe.Mutex`, `@unsafe.Condvar` |
+
+Within `@unsafe.Mutex.with_lock`, use `MutexGuard.with_value` to access the
+protected value and pass that guard to `Condvar.wait`. The old raw wait form is
+available only as `@unsafe.condvar_wait_unchecked`.
 
 ## Lifecycle Semantics
 
 | Primitive | Close and drop behavior |
 | --- | --- |
-| `Sender` / `OwnedBytesSender` | `close` is idempotent. The final sender drop closes the channel. |
-| `Receiver` / `OwnedBytesReceiver` | `close` is idempotent and wakes blocked endpoints. Queued messages drain before `recv` returns `None`. |
-| `Thread` | `join` is single-use; dropping an unjoined handle detaches the OS thread. |
-| `ThreadPool` | `close` rejects new tasks. `shutdown` drains accepted tasks, is idempotent from external threads, and rejects calls from a pool worker. |
+| `OwnedBytesSender` | `close` is idempotent. The final sender drop closes the channel. |
+| `OwnedBytesReceiver` | `close` is idempotent and wakes blocked endpoints. Queued messages drain before `recv` returns `None`. |
+| `unsafe.Sender` / `unsafe.Receiver` | Their close and drain semantics are unchanged, but payload ownership remains caller-enforced. |
+| `unsafe.Thread` | `join` is single-use; dropping an unjoined handle detaches the OS thread. |
+| `unsafe.ThreadPool` | `close` rejects new tasks. `shutdown` drains accepted tasks, is idempotent from external threads, and rejects calls from a pool worker. |
 
 Blocking channel operations, joins, waits, condition-variable waits, and pool
 shutdown must not run on a UI event-loop thread.

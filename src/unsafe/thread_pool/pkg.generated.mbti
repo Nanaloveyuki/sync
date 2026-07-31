@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Nanaloveyuki/sync/thread_pool"
+package "Nanaloveyuki/sync/unsafe/thread_pool"
 
 import {
   "Nanaloveyuki/sync/types",

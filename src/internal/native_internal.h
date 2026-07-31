@@ -46,4 +46,11 @@ static inline void *sync_alloc(size_t size) {
   return value;
 }
 
+static inline size_t sync_array_size_or_abort(int32_t length, size_t element_size) {
+  if (length <= 0 || (size_t)length > SIZE_MAX / element_size) {
+    abort();
+  }
+  return (size_t)length * element_size;
+}
+
 #endif

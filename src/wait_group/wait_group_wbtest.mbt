@@ -20,3 +20,16 @@ test "wait group waits for workers" {
   first.join()
   second.join()
 }
+
+///|
+test "wait group rejects count overflow" {
+  let group = WaitGroup::new()
+  try! group.add(2_147_483_647)
+  try {
+    group.add(1)
+    fail("overflow should raise")
+  } catch {
+    SyncError::InvalidWaitGroupCount => ()
+    _ => fail("unexpected error")
+  }
+}

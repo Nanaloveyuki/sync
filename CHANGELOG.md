@@ -2,6 +2,24 @@
 
 All notable changes to `sync` are documented in this file.
 
+## 0.3.0
+
+### Breaking
+
+- Restrict the root facade to native handles and the copied `OwnedBytes`
+  channel. Move threads, thread pools, generic channels, generic mutexes, and
+  condition variables to the explicit `Nanaloveyuki/sync/unsafe` facade.
+- Replace `Condvar.wait(condvar, mutex)` with guard-based waiting inside
+  `Mutex.with_lock`; retain the raw operation as
+  `unsafe.condvar_wait_unchecked`.
+
+### Safety
+
+- Reject WaitGroup count overflow and validate queue allocation multiplication
+  before allocation.
+- Track the owning mutex thread across condition waits and reject obvious
+  unlocked or foreign-thread waits before reaching the OS primitive.
+
 ## 0.2.1
 
 - Bound owned-bytes channels by both per-message and aggregate queued-byte

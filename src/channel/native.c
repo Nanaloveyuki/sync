@@ -76,7 +76,7 @@ MOONBIT_FFI_EXPORT sync_channel_handle_t *sync_channel_new(int32_t capacity) {
   core->refs = 1;
   core->capacity = capacity;
   core->senders = 1;
-  core->slots = (void **)sync_alloc((size_t)capacity * sizeof(void *));
+  core->slots = (void **)sync_alloc(sync_array_size_or_abort(capacity, sizeof(void *)));
   sync_os_mutex_init(&core->mutex);
   sync_os_cond_init(&core->readable);
   sync_os_cond_init(&core->writable);
@@ -348,7 +348,7 @@ MOONBIT_FFI_EXPORT sync_owned_bytes_channel_handle_t *sync_owned_bytes_channel_n
   core->max_queued_bytes = max_queued_bytes;
   core->senders = 1;
   core->slots = (sync_owned_bytes_message_t **)sync_alloc(
-    (size_t)capacity * sizeof(sync_owned_bytes_message_t *)
+    sync_array_size_or_abort(capacity, sizeof(sync_owned_bytes_message_t *))
   );
   sync_os_mutex_init(&core->mutex);
   sync_os_cond_init(&core->readable);

@@ -1,4 +1,4 @@
-#include "../internal/native_sync.h"
+#include "../../internal/native_sync.h"
 
 typedef void (*sync_call_closure_t)(void *);
 
@@ -126,7 +126,7 @@ MOONBIT_FFI_EXPORT sync_thread_pool_handle_t *sync_thread_pool_new(
   );
   core->refs = 1;
   core->call = call;
-  core->tasks = (void **)sync_alloc(sizeof(void *) * (size_t)capacity);
+  core->tasks = (void **)sync_alloc(sync_array_size_or_abort(capacity, sizeof(void *)));
   core->capacity = capacity;
   core->worker_count = worker_count;
   core->handles = 1;

@@ -3,6 +3,8 @@
 
 #include "native_internal.h"
 
+#include <string.h>
+
 #if defined(_WIN32)
 typedef SRWLOCK sync_os_mutex_t;
 typedef SRWLOCK sync_os_rwlock_t;
@@ -22,6 +24,10 @@ static inline void sync_os_mutex_lock(sync_os_mutex_t *mutex) {
 
 static inline void sync_os_mutex_unlock(sync_os_mutex_t *mutex) {
   ReleaseSRWLockExclusive(mutex);
+}
+
+static inline uint64_t sync_os_current_thread_id(void) {
+  return (uint64_t)GetCurrentThreadId();
 }
 
 static inline int32_t sync_os_rwlock_init(sync_os_rwlock_t *lock) {
@@ -61,8 +67,11 @@ static inline void sync_os_cond_destroy(sync_os_cond_t *cond) {
   (void)cond;
 }
 
-static inline void sync_os_cond_wait(sync_os_cond_t *cond, sync_os_mutex_t *mutex) {
-  (void)SleepConditionVariableSRW(cond, mutex, INFINITE, 0);
+static inline int32_t sync_os_cond_wait(sync_os_cond_t *cond, sync_os_mutex_t *mutex) {
+  if (SleepConditionVariableSRW(cond, mutex, INFINITE, 0)) {
+    return 0;
+  }
+  return (int32_t)GetLastError();
 }
 
 static inline void sync_os_cond_signal(sync_os_cond_t *cond) {
@@ -93,6 +102,13 @@ static inline void sync_os_mutex_lock(sync_os_mutex_t *mutex) {
 
 static inline void sync_os_mutex_unlock(sync_os_mutex_t *mutex) {
   (void)pthread_mutex_unlock(mutex);
+}
+
+static inline uint64_t sync_os_current_thread_id(void) {
+  pthread_t thread = pthread_self();
+  uint64_t id = 0;
+  memcpy(&id, &thread, sizeof(thread) < sizeof(id) ? sizeof(thread) : sizeof(id));
+  return id;
 }
 
 static inline int32_t sync_os_rwlock_init(sync_os_rwlock_t *lock) {
@@ -127,8 +143,8 @@ static inline void sync_os_cond_destroy(sync_os_cond_t *cond) {
   (void)pthread_cond_destroy(cond);
 }
 
-static inline void sync_os_cond_wait(sync_os_cond_t *cond, sync_os_mutex_t *mutex) {
-  (void)pthread_cond_wait(cond, mutex);
+static inline int32_t sync_os_cond_wait(sync_os_cond_t *cond, sync_os_mutex_t *mutex) {
+  return (int32_t)pthread_cond_wait(cond, mutex);
 }
 
 static inline void sync_os_cond_signal(sync_os_cond_t *cond) {
