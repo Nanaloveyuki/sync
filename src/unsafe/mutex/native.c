@@ -12,6 +12,10 @@ typedef struct {
   sync_mutex_core_t *core;
 } sync_mutex_handle_t;
 
+static int32_t sync_mutex_test_next_init_error = 0;
+static int32_t sync_condvar_test_next_init_error = 0;
+static int32_t sync_condvar_test_next_notify_error = 0;
+
 static void sync_mutex_finalize(void *self) {
   sync_mutex_handle_t *handle = (sync_mutex_handle_t *)self;
   if (handle->core != NULL && sync_arc_dec(&handle->core->refs) == 0) {
@@ -32,11 +36,24 @@ static sync_mutex_handle_t *sync_mutex_wrap(sync_mutex_core_t *core) {
   return handle;
 }
 
-MOONBIT_FFI_EXPORT sync_mutex_handle_t *sync_mutex_new(void *value) {
+MOONBIT_FFI_EXPORT sync_mutex_handle_t *sync_mutex_new(
+  void *value,
+  int32_t *status
+) {
   sync_mutex_core_t *core = (sync_mutex_core_t *)sync_alloc(sizeof(sync_mutex_core_t));
   core->refs = 1;
   core->value = value;
-  sync_os_mutex_init(&core->mutex);
+  if (sync_mutex_test_next_init_error != 0) {
+    *status = sync_mutex_test_next_init_error;
+    sync_mutex_test_next_init_error = 0;
+  } else {
+    *status = sync_os_mutex_init(&core->mutex);
+  }
+  if (*status != 0) {
+    moonbit_decref(value);
+    free(core);
+    return NULL;
+  }
   return sync_mutex_wrap(core);
 }
 
@@ -45,19 +62,29 @@ MOONBIT_FFI_EXPORT sync_mutex_handle_t *sync_mutex_share(sync_mutex_handle_t *va
   return sync_mutex_wrap(value->core);
 }
 
-MOONBIT_FFI_EXPORT void *sync_mutex_lock_get(sync_mutex_handle_t *value) {
-  sync_os_mutex_lock(&value->core->mutex);
+MOONBIT_FFI_EXPORT void *sync_mutex_lock_get(
+  sync_mutex_handle_t *value,
+  int32_t *status
+) {
+  *status = sync_os_mutex_lock(&value->core->mutex);
+  if (*status != 0) {
+    return NULL;
+  }
   value->core->owner = sync_os_current_thread_id();
   value->core->locked = 1;
   moonbit_incref(value->core->value);
   return value->core->value;
 }
 
-MOONBIT_FFI_EXPORT void sync_mutex_release_unlock(sync_mutex_handle_t *value, void *box) {
+MOONBIT_FFI_EXPORT void sync_mutex_release_unlock(
+  sync_mutex_handle_t *value,
+  void *box,
+  int32_t *status
+) {
   moonbit_decref(box);
   value->core->locked = 0;
   value->core->owner = 0;
-  sync_os_mutex_unlock(&value->core->mutex);
+  *status = sync_os_mutex_unlock(&value->core->mutex);
 }
 
 typedef struct {
@@ -86,10 +113,19 @@ static sync_cond_handle_t *sync_cond_wrap(sync_cond_core_t *core) {
   return handle;
 }
 
-MOONBIT_FFI_EXPORT sync_cond_handle_t *sync_condvar_new(void) {
+MOONBIT_FFI_EXPORT sync_cond_handle_t *sync_condvar_new(int32_t *status) {
   sync_cond_core_t *core = (sync_cond_core_t *)sync_alloc(sizeof(sync_cond_core_t));
   core->refs = 1;
-  sync_os_cond_init(&core->cond);
+  if (sync_condvar_test_next_init_error != 0) {
+    *status = sync_condvar_test_next_init_error;
+    sync_condvar_test_next_init_error = 0;
+  } else {
+    *status = sync_os_cond_init(&core->cond);
+  }
+  if (*status != 0) {
+    free(core);
+    return NULL;
+  }
   return sync_cond_wrap(core);
 }
 
@@ -114,10 +150,32 @@ MOONBIT_FFI_EXPORT int32_t sync_condvar_wait(
   return status;
 }
 
-MOONBIT_FFI_EXPORT void sync_condvar_notify_one(sync_cond_handle_t *value) {
-  sync_os_cond_signal(&value->core->cond);
+MOONBIT_FFI_EXPORT int32_t sync_condvar_notify_one(sync_cond_handle_t *value) {
+  if (sync_condvar_test_next_notify_error != 0) {
+    int32_t status = sync_condvar_test_next_notify_error;
+    sync_condvar_test_next_notify_error = 0;
+    return status;
+  }
+  return sync_os_cond_signal(&value->core->cond);
 }
 
-MOONBIT_FFI_EXPORT void sync_condvar_notify_all(sync_cond_handle_t *value) {
-  sync_os_cond_broadcast(&value->core->cond);
+MOONBIT_FFI_EXPORT int32_t sync_condvar_notify_all(sync_cond_handle_t *value) {
+  if (sync_condvar_test_next_notify_error != 0) {
+    int32_t status = sync_condvar_test_next_notify_error;
+    sync_condvar_test_next_notify_error = 0;
+    return status;
+  }
+  return sync_os_cond_broadcast(&value->core->cond);
+}
+
+MOONBIT_FFI_EXPORT void sync_mutex_test_fail_next_init(int32_t status) {
+  sync_mutex_test_next_init_error = status;
+}
+
+MOONBIT_FFI_EXPORT void sync_condvar_test_fail_next_init(int32_t status) {
+  sync_condvar_test_next_init_error = status;
+}
+
+MOONBIT_FFI_EXPORT void sync_condvar_test_fail_next_notify(int32_t status) {
+  sync_condvar_test_next_notify_error = status;
 }

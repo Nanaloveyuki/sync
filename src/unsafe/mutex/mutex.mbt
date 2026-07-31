@@ -35,8 +35,16 @@ pub fn[T, R] MutexGuard::with_value(
 }
 
 ///|
-pub fn[T] Mutex::new(value : T) -> Mutex[T] {
-  { handle: native_mutex_new(box_value(value)), marker: type_marker }
+/// Creates a native mutex protecting `value`.
+///
+/// Raises `MutexInitializationFailed` when the OS mutex cannot be initialized.
+pub fn[T] Mutex::new(value : T) -> Mutex[T] raise SyncError {
+  let status = Ref::Ref(0)
+  let handle = native_mutex_new(box_value(value), status)
+  if status.val != 0 {
+    raise SyncError::MutexInitializationFailed(status.val)
+  }
+  { handle, marker: type_marker }
 }
 
 ///|
@@ -57,7 +65,11 @@ pub fn[T, R] Mutex::with_lock(
   f : (MutexGuard[T]) -> R raise?,
 ) -> R raise? {
   ignore(self.marker)
-  let raw = native_mutex_lock_get(self.handle)
+  let lock_status = Ref::Ref(0)
+  let raw = native_mutex_lock_get(self.handle, lock_status)
+  if lock_status.val != 0 {
+    panic()
+  }
   let active = Ref::Ref(true)
   let lock_guard = {
     handle: native_mutex_share(self.handle),
@@ -68,13 +80,21 @@ pub fn[T, R] Mutex::with_lock(
   try f(lock_guard) catch {
     err => {
       active.val = false
-      native_mutex_release_unlock(self.handle, raw)
+      let unlock_status = Ref::Ref(0)
+      native_mutex_release_unlock(self.handle, raw, unlock_status)
+      if unlock_status.val != 0 {
+        panic()
+      }
       raise err
     }
   } noraise {
     result => {
       active.val = false
-      native_mutex_release_unlock(self.handle, raw)
+      let unlock_status = Ref::Ref(0)
+      native_mutex_release_unlock(self.handle, raw, unlock_status)
+      if unlock_status.val != 0 {
+        panic()
+      }
       result
     }
   }
@@ -82,8 +102,16 @@ pub fn[T, R] Mutex::with_lock(
 
 ///|
 /// Creates a native condition variable.
-pub fn Condvar::new() -> Condvar {
-  native_condvar_new()
+///
+/// Raises `CondvarInitializationFailed` when the OS condition variable cannot
+/// be initialized.
+pub fn Condvar::new() -> Condvar raise SyncError {
+  let status = Ref::Ref(0)
+  let condvar = native_condvar_new(status)
+  if status.val != 0 {
+    raise SyncError::CondvarInitializationFailed(status.val)
+  }
+  condvar
 }
 
 ///|
@@ -123,11 +151,23 @@ pub fn[T] condvar_wait_unchecked(
 }
 
 ///|
-pub fn Condvar::notify_one(self : Condvar) -> Unit {
-  native_condvar_notify_one(self)
+/// Wakes one waiter.
+///
+/// Raises `CondvarOperationFailed` when the OS reports a signal failure.
+pub fn Condvar::notify_one(self : Condvar) -> Unit raise SyncError {
+  let status = native_condvar_notify_one(self)
+  if status != 0 {
+    raise SyncError::CondvarOperationFailed(status)
+  }
 }
 
 ///|
-pub fn Condvar::notify_all(self : Condvar) -> Unit {
-  native_condvar_notify_all(self)
+/// Wakes all waiters.
+///
+/// Raises `CondvarOperationFailed` when the OS reports a broadcast failure.
+pub fn Condvar::notify_all(self : Condvar) -> Unit raise SyncError {
+  let status = native_condvar_notify_all(self)
+  if status != 0 {
+    raise SyncError::CondvarOperationFailed(status)
+  }
 }

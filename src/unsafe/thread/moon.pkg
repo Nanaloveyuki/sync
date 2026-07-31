@@ -2,6 +2,11 @@ import {
   "Nanaloveyuki/sync/types",
 }
 
+import {
+  "Nanaloveyuki/sync/atomic",
+  "Nanaloveyuki/sync/wait_group",
+} for "wbtest"
+
 supported_targets = "native"
 
 options(
