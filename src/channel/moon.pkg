@@ -4,6 +4,11 @@ import {
 
 import {
   "Nanaloveyuki/sync/unsafe/thread",
+  "moonbitlang/core/bench",
+} for "test"
+
+import {
+  "Nanaloveyuki/sync/unsafe/thread",
 } for "wbtest"
 
 supported_targets = "native"
