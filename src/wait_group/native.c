@@ -11,11 +11,23 @@ typedef struct {
   sync_wait_group_core_t *core;
 } sync_wait_group_handle_t;
 
+static void sync_wait_group_abort_if_failed(int32_t status) {
+  if (status != 0) {
+    abort();
+  }
+}
+
+static void sync_wait_group_record_error(int32_t *status, int32_t candidate) {
+  if (*status == 0 && candidate != 0) {
+    *status = candidate;
+  }
+}
+
 static void sync_wait_group_finalize(void *self) {
   sync_wait_group_handle_t *handle = (sync_wait_group_handle_t *)self;
   if (handle->core != NULL && sync_arc_dec(&handle->core->refs) == 0) {
-    sync_os_cond_destroy(&handle->core->cond);
-    sync_os_mutex_destroy(&handle->core->mutex);
+    sync_wait_group_abort_if_failed(sync_os_cond_destroy(&handle->core->cond));
+    sync_wait_group_abort_if_failed(sync_os_mutex_destroy(&handle->core->mutex));
     free(handle->core);
   }
 }
@@ -29,13 +41,22 @@ static sync_wait_group_handle_t *sync_wait_group_wrap(sync_wait_group_core_t *co
   return handle;
 }
 
-MOONBIT_FFI_EXPORT sync_wait_group_handle_t *sync_wait_group_new(void) {
+MOONBIT_FFI_EXPORT sync_wait_group_handle_t *sync_wait_group_new(int32_t *status) {
   sync_wait_group_core_t *core = (sync_wait_group_core_t *)sync_alloc(
     sizeof(sync_wait_group_core_t)
   );
   core->refs = 1;
-  sync_os_mutex_init(&core->mutex);
-  sync_os_cond_init(&core->cond);
+  *status = sync_os_mutex_init(&core->mutex);
+  if (*status != 0) {
+    free(core);
+    return NULL;
+  }
+  *status = sync_os_cond_init(&core->cond);
+  if (*status != 0) {
+    sync_wait_group_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
+    free(core);
+    return NULL;
+  }
   return sync_wait_group_wrap(core);
 }
 
@@ -48,28 +69,42 @@ MOONBIT_FFI_EXPORT sync_wait_group_handle_t *sync_wait_group_share(
 
 MOONBIT_FFI_EXPORT int32_t sync_wait_group_add(
   sync_wait_group_handle_t *value,
-  int32_t delta
+  int32_t delta,
+  int32_t *status
 ) {
   sync_wait_group_core_t *core = value->core;
-  sync_os_mutex_lock(&core->mutex);
+  *status = sync_os_mutex_lock(&core->mutex);
+  if (*status != 0) {
+    return 0;
+  }
   int64_t next = (int64_t)core->count + (int64_t)delta;
   if (next < 0 || next > INT32_MAX) {
-    sync_os_mutex_unlock(&core->mutex);
+    sync_wait_group_record_error(status, sync_os_mutex_unlock(&core->mutex));
     return 0;
   }
   core->count = (int32_t)next;
   if (core->count == 0) {
-    sync_os_cond_broadcast(&core->cond);
+    sync_wait_group_record_error(status, sync_os_cond_broadcast(&core->cond));
   }
-  sync_os_mutex_unlock(&core->mutex);
-  return 1;
+  sync_wait_group_record_error(status, sync_os_mutex_unlock(&core->mutex));
+  return *status == 0;
 }
 
-MOONBIT_FFI_EXPORT void sync_wait_group_wait(sync_wait_group_handle_t *value) {
+MOONBIT_FFI_EXPORT void sync_wait_group_wait(
+  sync_wait_group_handle_t *value,
+  int32_t *status
+) {
   sync_wait_group_core_t *core = value->core;
-  sync_os_mutex_lock(&core->mutex);
-  while (core->count != 0) {
-    sync_os_cond_wait(&core->cond, &core->mutex);
+  *status = sync_os_mutex_lock(&core->mutex);
+  if (*status != 0) {
+    return;
   }
-  sync_os_mutex_unlock(&core->mutex);
+  while (core->count != 0) {
+    int32_t wait_status = sync_os_cond_wait(&core->cond, &core->mutex);
+    if (wait_status != 0) {
+      sync_wait_group_record_error(status, wait_status);
+      break;
+    }
+  }
+  sync_wait_group_record_error(status, sync_os_mutex_unlock(&core->mutex));
 }

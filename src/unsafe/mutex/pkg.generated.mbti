@@ -24,7 +24,7 @@ pub struct Mutex[T] {
 }
 pub fn[T] Mutex::new(T) -> Self[T] raise @types.SyncError
 pub fn[T] Mutex::share(Self[T]) -> Self[T]
-pub fn[T, R] Mutex::with_lock(Self[T], (MutexGuard[T]) -> R raise?) -> R raise?
+pub fn[T, R] Mutex::with_lock(Self[T], (MutexGuard[T]) -> R raise?) -> R raise
 
 pub struct MutexGuard[T] {
   // private fields

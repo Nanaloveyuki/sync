@@ -13,9 +13,9 @@ import {
 type WaitGroup
 pub fn WaitGroup::add(Self, Int) -> Unit raise @types.SyncError
 pub fn WaitGroup::done(Self) -> Unit raise @types.SyncError
-pub fn WaitGroup::new() -> Self
+pub fn WaitGroup::new() -> Self raise @types.SyncError
 pub fn WaitGroup::share(Self) -> Self
-pub fn WaitGroup::wait(Self) -> Unit
+pub fn WaitGroup::wait(Self) -> Unit raise @types.SyncError
 
 // Type aliases
 pub using @types {type SyncError}

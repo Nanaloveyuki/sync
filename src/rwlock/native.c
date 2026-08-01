@@ -10,11 +10,17 @@ typedef struct {
   sync_rwlock_core_t *core;
 } sync_rwlock_handle_t;
 
+static void sync_rwlock_abort_if_failed(int32_t status) {
+  if (status != 0) {
+    abort();
+  }
+}
+
 static void sync_rwlock_finalize(void *self) {
   sync_rwlock_handle_t *handle = (sync_rwlock_handle_t *)self;
   if (handle->core != NULL && sync_arc_dec(&handle->core->refs) == 0) {
     if (handle->core->initialized) {
-      sync_os_rwlock_destroy(&handle->core->lock);
+      sync_rwlock_abort_if_failed(sync_os_rwlock_destroy(&handle->core->lock));
     }
     free(handle->core);
   }
@@ -33,7 +39,11 @@ MOONBIT_FFI_EXPORT sync_rwlock_handle_t *sync_rwlock_new(int32_t *status) {
   sync_rwlock_core_t *core = (sync_rwlock_core_t *)sync_alloc(sizeof(sync_rwlock_core_t));
   core->refs = 1;
   *status = sync_os_rwlock_init(&core->lock);
-  core->initialized = *status == 0;
+  if (*status != 0) {
+    free(core);
+    return NULL;
+  }
+  core->initialized = 1;
   return sync_rwlock_wrap(core);
 }
 

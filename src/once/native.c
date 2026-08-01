@@ -11,11 +11,23 @@ typedef struct {
   sync_once_core_t *core;
 } sync_once_handle_t;
 
+static void sync_once_abort_if_failed(int32_t status) {
+  if (status != 0) {
+    abort();
+  }
+}
+
+static void sync_once_record_error(int32_t *status, int32_t candidate) {
+  if (*status == 0 && candidate != 0) {
+    *status = candidate;
+  }
+}
+
 static void sync_once_finalize(void *self) {
   sync_once_handle_t *handle = (sync_once_handle_t *)self;
   if (handle->core != NULL && sync_arc_dec(&handle->core->refs) == 0) {
-    sync_os_cond_destroy(&handle->core->cond);
-    sync_os_mutex_destroy(&handle->core->mutex);
+    sync_once_abort_if_failed(sync_os_cond_destroy(&handle->core->cond));
+    sync_once_abort_if_failed(sync_os_mutex_destroy(&handle->core->mutex));
     free(handle->core);
   }
 }
@@ -29,11 +41,20 @@ static sync_once_handle_t *sync_once_wrap(sync_once_core_t *core) {
   return handle;
 }
 
-MOONBIT_FFI_EXPORT sync_once_handle_t *sync_once_new(void) {
+MOONBIT_FFI_EXPORT sync_once_handle_t *sync_once_new(int32_t *status) {
   sync_once_core_t *core = (sync_once_core_t *)sync_alloc(sizeof(sync_once_core_t));
   core->refs = 1;
-  sync_os_mutex_init(&core->mutex);
-  sync_os_cond_init(&core->cond);
+  *status = sync_os_mutex_init(&core->mutex);
+  if (*status != 0) {
+    free(core);
+    return NULL;
+  }
+  *status = sync_os_cond_init(&core->cond);
+  if (*status != 0) {
+    sync_once_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
+    free(core);
+    return NULL;
+  }
   return sync_once_wrap(core);
 }
 
@@ -42,32 +63,58 @@ MOONBIT_FFI_EXPORT sync_once_handle_t *sync_once_share(sync_once_handle_t *value
   return sync_once_wrap(value->core);
 }
 
-MOONBIT_FFI_EXPORT int32_t sync_once_begin(sync_once_handle_t *value) {
+MOONBIT_FFI_EXPORT int32_t sync_once_begin(
+  sync_once_handle_t *value,
+  int32_t *status
+) {
   sync_once_core_t *core = value->core;
-  sync_os_mutex_lock(&core->mutex);
-  while (core->state == 1) {
-    sync_os_cond_wait(&core->cond, &core->mutex);
+  *status = sync_os_mutex_lock(&core->mutex);
+  if (*status != 0) {
+    return 0;
   }
+  while (core->state == 1) {
+    int32_t wait_status = sync_os_cond_wait(&core->cond, &core->mutex);
+    if (wait_status != 0) {
+      *status = wait_status;
+      sync_once_record_error(status, sync_os_mutex_unlock(&core->mutex));
+      return 0;
+    }
+  }
+  int32_t result;
   if (core->state == 0) {
     core->state = 1;
-    sync_os_mutex_unlock(&core->mutex);
-    return 1;
+    result = 1;
+  } else {
+    result = core->state == 2 ? 0 : -1;
   }
-  int32_t result = core->state == 2 ? 0 : -1;
-  sync_os_mutex_unlock(&core->mutex);
+  sync_once_record_error(status, sync_os_mutex_unlock(&core->mutex));
   return result;
 }
 
-MOONBIT_FFI_EXPORT void sync_once_complete(sync_once_handle_t *value) {
-  sync_os_mutex_lock(&value->core->mutex);
-  value->core->state = 2;
-  sync_os_cond_broadcast(&value->core->cond);
-  sync_os_mutex_unlock(&value->core->mutex);
+MOONBIT_FFI_EXPORT void sync_once_complete(
+  sync_once_handle_t *value,
+  int32_t *status
+) {
+  sync_once_core_t *core = value->core;
+  *status = sync_os_mutex_lock(&core->mutex);
+  if (*status != 0) {
+    return;
+  }
+  core->state = 2;
+  sync_once_record_error(status, sync_os_cond_broadcast(&core->cond));
+  sync_once_record_error(status, sync_os_mutex_unlock(&core->mutex));
 }
 
-MOONBIT_FFI_EXPORT void sync_once_poison(sync_once_handle_t *value) {
-  sync_os_mutex_lock(&value->core->mutex);
-  value->core->state = 3;
-  sync_os_cond_broadcast(&value->core->cond);
-  sync_os_mutex_unlock(&value->core->mutex);
+MOONBIT_FFI_EXPORT void sync_once_poison(
+  sync_once_handle_t *value,
+  int32_t *status
+) {
+  sync_once_core_t *core = value->core;
+  *status = sync_os_mutex_lock(&core->mutex);
+  if (*status != 0) {
+    return;
+  }
+  core->state = 3;
+  sync_once_record_error(status, sync_os_cond_broadcast(&core->cond));
+  sync_once_record_error(status, sync_os_mutex_unlock(&core->mutex));
 }

@@ -16,7 +16,9 @@ pub fn[T] condvar_wait_unchecked(@mutex.Condvar, @mutex.Mutex[T]) -> Unit raise 
 
 pub fn current_thread_id() -> UInt64
 
-pub fn[T] spawn(() -> T raise) -> @thread.Thread[T] raise @types.SyncError
+pub fn spawn(() -> Unit raise) -> @thread.Thread raise @types.SyncError
+
+pub fn[T] spawn_unchecked(() -> T raise) -> @thread.UnsafeThread[T] raise @types.SyncError
 
 pub fn yield_now() -> Unit
 
@@ -46,6 +48,8 @@ pub using @thread_pool {type TryExecuteResult}
 pub using @channel {type TryRecvResult}
 
 pub using @channel {type TrySendResult}
+
+pub using @thread {type UnsafeThread}
 
 // Traits
 

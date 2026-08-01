@@ -20,7 +20,7 @@ fn owned_bytes_bench_receive_exact(
 fn owned_bytes_bench_spawn_worker(
   command_receiver : OwnedBytesReceiver,
   data_sender : OwnedBytesSender,
-) -> @thread.Thread[Unit] {
+) -> @thread.Thread {
   try! @thread.spawn(fn() raise {
     let payload = Bytes::make(64, b'\x00')
     for ;; {
@@ -95,7 +95,7 @@ test "bench owned bytes steady 1p1c 64B" (b : @bench.T) {
 test "bench owned bytes 4p1c 64B" (b : @bench.T) {
   b.bench(name="owned_bytes/4p1c/64B", count=30, fn() {
     let (sender, receiver) = try! owned_bytes_bounded(1_024)
-    let workers : Array[@thread.Thread[Unit]] = []
+    let workers : Array[@thread.Thread] = []
     for _ in 0..<4 {
       let worker_sender = try! sender.share()
       workers.push(
@@ -124,7 +124,7 @@ test "bench owned bytes 4p1c 64B" (b : @bench.T) {
 test "bench owned bytes steady 4p1c 64B" (b : @bench.T) {
   let (data_sender, data_receiver) = try! owned_bytes_bounded(1_024)
   let command_senders : Array[OwnedBytesSender] = []
-  let workers : Array[@thread.Thread[Unit]] = []
+  let workers : Array[@thread.Thread] = []
   for _ in 0..<4 {
     let (command_sender, command_receiver) = try! owned_bytes_bounded(1)
     command_senders.push(command_sender)

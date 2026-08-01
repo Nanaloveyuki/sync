@@ -12,6 +12,11 @@ fn pool_test_blocking_task(
 }
 
 ///|
+extern "C" fn native_thread_pool_test_fail_alloc_after(
+  successful_allocations : Int,
+) -> Unit = "sync_thread_pool_test_fail_alloc_after"
+
+///|
 test "thread pool runs a fixed set of workers and drains on shutdown" {
   let pool = ThreadPool::new(4, 8)
   let started = @atomic.AtomicInt::new(0)
@@ -169,6 +174,47 @@ test "thread pool validates its configuration" {
   } catch {
     SyncError::InvalidCapacity(0) => ()
     _ => fail("unexpected error")
+  }
+}
+
+///|
+test "thread pool rejects sizes above its native resource limits" {
+  try {
+    ignore(ThreadPool::new(max_worker_count + 1, 1))
+    fail("worker limit should fail")
+  } catch {
+    SyncError::InvalidWorkerCount(count) =>
+      assert_eq(count, max_worker_count + 1)
+    _ => fail("unexpected worker limit error")
+  }
+  try {
+    ignore(ThreadPool::new(1, max_queue_capacity + 1))
+    fail("queue limit should fail")
+  } catch {
+    SyncError::InvalidCapacity(capacity) =>
+      assert_eq(capacity, max_queue_capacity + 1)
+    _ => fail("unexpected queue limit error")
+  }
+}
+
+///|
+test "thread pool reports allocation failures" {
+  native_thread_pool_test_fail_alloc_after(0)
+  try {
+    ignore(ThreadPool::new(1, 1))
+    fail("core allocation failure should be reported")
+  } catch {
+    SyncError::ThreadPoolCreationFailed(status) => assert_eq(status, -2)
+    _ => fail("unexpected core allocation error")
+  }
+
+  native_thread_pool_test_fail_alloc_after(1)
+  try {
+    ignore(ThreadPool::new(1, 1))
+    fail("queue allocation failure should be reported")
+  } catch {
+    SyncError::ThreadPoolCreationFailed(status) => assert_eq(status, -2)
+    _ => fail("unexpected queue allocation error")
   }
 }
 

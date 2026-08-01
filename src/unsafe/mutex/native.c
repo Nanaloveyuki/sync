@@ -16,13 +16,19 @@ static int32_t sync_mutex_test_next_init_error = 0;
 static int32_t sync_condvar_test_next_init_error = 0;
 static int32_t sync_condvar_test_next_notify_error = 0;
 
+static void sync_mutex_abort_if_failed(int32_t status) {
+  if (status != 0) {
+    abort();
+  }
+}
+
 static void sync_mutex_finalize(void *self) {
   sync_mutex_handle_t *handle = (sync_mutex_handle_t *)self;
   if (handle->core != NULL && sync_arc_dec(&handle->core->refs) == 0) {
     if (handle->core->value != NULL) {
       moonbit_decref(handle->core->value);
     }
-    sync_os_mutex_destroy(&handle->core->mutex);
+    sync_mutex_abort_if_failed(sync_os_mutex_destroy(&handle->core->mutex));
     free(handle->core);
   }
 }
@@ -99,7 +105,7 @@ typedef struct {
 static void sync_cond_finalize(void *self) {
   sync_cond_handle_t *handle = (sync_cond_handle_t *)self;
   if (handle->core != NULL && sync_arc_dec(&handle->core->refs) == 0) {
-    sync_os_cond_destroy(&handle->core->cond);
+    sync_mutex_abort_if_failed(sync_os_cond_destroy(&handle->core->cond));
     free(handle->core);
   }
 }

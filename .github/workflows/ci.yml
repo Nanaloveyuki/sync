@@ -113,6 +113,57 @@ jobs:
             moon test --target native --release --deny-warn --quiet
           done
 
+  sanitizer:
+    name: Sanitizers (Ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+
+      - name: Run native ASan and UBSan tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/run-asan.py --repo-root .
+
+      - name: Verify dropped thread handles fail fast
+        shell: bash
+        run: |
+          set -euo pipefail
+          moon build src/test_programs/thread_drop_abort --target native --release --deny-warn
+          build_dir="_build/native/release/build/test_programs/thread_drop_abort"
+          binary="$(find "$build_dir" -maxdepth 1 -type f -perm -111 -print -quit)"
+          if [ -z "$binary" ]; then
+            echo "smoke binary was not produced in: $build_dir"
+            exit 1
+          fi
+          set +e
+          timeout --signal=KILL 30s "$binary"
+          status=$?
+          set -e
+          case "$status" in
+            0)
+              echo "an unjoined thread handle did not fail fast"
+              exit 1
+              ;;
+            124|137)
+              echo "dropped-handle smoke test timed out"
+              exit 1
+              ;;
+            125|126|127)
+              echo "dropped-handle smoke test could not be executed: $status"
+              exit 1
+              ;;
+            *)
+              echo "dropped-handle smoke test exited with expected non-zero status: $status"
+              ;;
+          esac
+
   coverage:
     name: Coverage (Ubuntu)
     runs-on: ubuntu-latest

@@ -1,0 +1,7 @@
+import {
+  "Nanaloveyuki/sync/unsafe/thread",
+}
+
+supported_targets = "native"
+
+pkgtype(kind: "executable")

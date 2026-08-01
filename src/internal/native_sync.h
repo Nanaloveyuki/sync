@@ -39,8 +39,9 @@ static inline int32_t sync_os_rwlock_init(sync_os_rwlock_t *lock) {
   return 0;
 }
 
-static inline void sync_os_rwlock_destroy(sync_os_rwlock_t *lock) {
+static inline int32_t sync_os_rwlock_destroy(sync_os_rwlock_t *lock) {
   (void)lock;
+  return 0;
 }
 
 static inline int32_t sync_os_rwlock_read_lock(sync_os_rwlock_t *lock) {
@@ -123,8 +124,8 @@ static inline int32_t sync_os_rwlock_init(sync_os_rwlock_t *lock) {
   return (int32_t)pthread_rwlock_init(lock, NULL);
 }
 
-static inline void sync_os_rwlock_destroy(sync_os_rwlock_t *lock) {
-  (void)pthread_rwlock_destroy(lock);
+static inline int32_t sync_os_rwlock_destroy(sync_os_rwlock_t *lock) {
+  return (int32_t)pthread_rwlock_destroy(lock);
 }
 
 static inline int32_t sync_os_rwlock_read_lock(sync_os_rwlock_t *lock) {

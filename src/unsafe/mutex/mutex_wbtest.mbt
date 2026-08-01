@@ -11,7 +11,7 @@ extern "C" fn native_condvar_test_fail_next_notify(status : Int) -> Unit = "sync
 test "mutex protects a generic value" {
   let value = try! Mutex::new(0)
   let worker_value = value.share()
-  let thread = @thread.spawn(fn() {
+  let thread = @thread.spawn(fn() raise {
     for i = 0; i < 2000; i = i + 1 {
       worker_value.with_lock(fn(lock_guard) {
         lock_guard.with_value(fn(cell) { cell.val += 1 })
