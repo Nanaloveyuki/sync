@@ -8,6 +8,12 @@ static void sync_record_error(int32_t *error, int32_t status) {
   }
 }
 
+static void sync_channel_abort_if_failed(int32_t status) {
+  if (status != 0) {
+    abort();
+  }
+}
+
 static int32_t sync_channel_test_next_init_error = 0;
 static int32_t sync_channel_test_next_operation_error = 0;
 
@@ -47,9 +53,9 @@ static void sync_channel_core_release(sync_channel_core_t *core) {
     }
   }
   free(core->slots);
-  (void)sync_os_cond_destroy(&core->writable);
-  (void)sync_os_cond_destroy(&core->readable);
-  (void)sync_os_mutex_destroy(&core->mutex);
+  sync_channel_abort_if_failed(sync_os_cond_destroy(&core->writable));
+  sync_channel_abort_if_failed(sync_os_cond_destroy(&core->readable));
+  sync_channel_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
   free(core);
 }
 
@@ -59,22 +65,21 @@ static void sync_channel_finalize(void *self) {
   if (core == NULL) {
     return;
   }
-  if (sync_os_mutex_lock(&core->mutex) == 0) {
-    if (handle->role == 1) {
-      core->senders -= 1;
-      if (core->senders == 0) {
-        core->closed = 1;
-        (void)sync_os_cond_broadcast(&core->readable);
-        (void)sync_os_cond_broadcast(&core->writable);
-      }
-    } else if (handle->role == 2 && core->receiver_alive) {
-      core->receiver_alive = 0;
+  sync_channel_abort_if_failed(sync_os_mutex_lock(&core->mutex));
+  if (handle->role == 1) {
+    core->senders -= 1;
+    if (core->senders == 0) {
       core->closed = 1;
-      (void)sync_os_cond_broadcast(&core->readable);
-      (void)sync_os_cond_broadcast(&core->writable);
+      sync_channel_abort_if_failed(sync_os_cond_broadcast(&core->readable));
+      sync_channel_abort_if_failed(sync_os_cond_broadcast(&core->writable));
     }
-    (void)sync_os_mutex_unlock(&core->mutex);
+  } else if (handle->role == 2 && core->receiver_alive) {
+    core->receiver_alive = 0;
+    core->closed = 1;
+    sync_channel_abort_if_failed(sync_os_cond_broadcast(&core->readable));
+    sync_channel_abort_if_failed(sync_os_cond_broadcast(&core->writable));
   }
+  sync_channel_abort_if_failed(sync_os_mutex_unlock(&core->mutex));
   sync_channel_core_release(core);
 }
 
@@ -110,15 +115,15 @@ MOONBIT_FFI_EXPORT sync_channel_handle_t *sync_channel_new(
   }
   *status = sync_os_cond_init(&core->readable);
   if (*status != 0) {
-    (void)sync_os_mutex_destroy(&core->mutex);
+    sync_channel_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
     free(core->slots);
     free(core);
     return NULL;
   }
   *status = sync_os_cond_init(&core->writable);
   if (*status != 0) {
-    (void)sync_os_cond_destroy(&core->readable);
-    (void)sync_os_mutex_destroy(&core->mutex);
+    sync_channel_abort_if_failed(sync_os_cond_destroy(&core->readable));
+    sync_channel_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
     free(core->slots);
     free(core);
     return NULL;
@@ -385,9 +390,9 @@ static void sync_owned_bytes_core_release(sync_owned_bytes_channel_core_t *core)
     sync_owned_bytes_message_release(core->slots[index]);
   }
   free(core->slots);
-  (void)sync_os_cond_destroy(&core->writable);
-  (void)sync_os_cond_destroy(&core->readable);
-  (void)sync_os_mutex_destroy(&core->mutex);
+  sync_channel_abort_if_failed(sync_os_cond_destroy(&core->writable));
+  sync_channel_abort_if_failed(sync_os_cond_destroy(&core->readable));
+  sync_channel_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
   free(core);
 }
 
@@ -397,22 +402,21 @@ static void sync_owned_bytes_finalize(void *self) {
   if (core == NULL) {
     return;
   }
-  if (sync_os_mutex_lock(&core->mutex) == 0) {
-    if (handle->role == 1) {
-      core->senders -= 1;
-      if (core->senders == 0) {
-        core->closed = 1;
-        (void)sync_os_cond_broadcast(&core->readable);
-        (void)sync_os_cond_broadcast(&core->writable);
-      }
-    } else if (handle->role == 2 && core->receiver_alive) {
-      core->receiver_alive = 0;
+  sync_channel_abort_if_failed(sync_os_mutex_lock(&core->mutex));
+  if (handle->role == 1) {
+    core->senders -= 1;
+    if (core->senders == 0) {
       core->closed = 1;
-      (void)sync_os_cond_broadcast(&core->readable);
-      (void)sync_os_cond_broadcast(&core->writable);
+      sync_channel_abort_if_failed(sync_os_cond_broadcast(&core->readable));
+      sync_channel_abort_if_failed(sync_os_cond_broadcast(&core->writable));
     }
-    (void)sync_os_mutex_unlock(&core->mutex);
+  } else if (handle->role == 2 && core->receiver_alive) {
+    core->receiver_alive = 0;
+    core->closed = 1;
+    sync_channel_abort_if_failed(sync_os_cond_broadcast(&core->readable));
+    sync_channel_abort_if_failed(sync_os_cond_broadcast(&core->writable));
   }
+  sync_channel_abort_if_failed(sync_os_mutex_unlock(&core->mutex));
   sync_owned_bytes_core_release(core);
 }
 
@@ -458,15 +462,15 @@ MOONBIT_FFI_EXPORT sync_owned_bytes_channel_handle_t *sync_owned_bytes_channel_n
   }
   *status = sync_os_cond_init(&core->readable);
   if (*status != 0) {
-    (void)sync_os_mutex_destroy(&core->mutex);
+    sync_channel_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
     free(core->slots);
     free(core);
     return NULL;
   }
   *status = sync_os_cond_init(&core->writable);
   if (*status != 0) {
-    (void)sync_os_cond_destroy(&core->readable);
-    (void)sync_os_mutex_destroy(&core->mutex);
+    sync_channel_abort_if_failed(sync_os_cond_destroy(&core->readable));
+    sync_channel_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
     free(core->slots);
     free(core);
     return NULL;

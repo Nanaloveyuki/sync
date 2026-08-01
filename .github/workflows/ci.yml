@@ -113,6 +113,36 @@ jobs:
             moon test --target native --release --deny-warn --quiet
           done
 
+  sanitizer:
+    name: Sanitizers (Ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+
+      - name: Run native ASan and UBSan tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/run-asan.py --repo-root .
+
+      - name: Verify dropped thread handles fail fast
+        shell: bash
+        run: |
+          set +e
+          moon run src/test_programs/thread_drop_abort --target native --deny-warn
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "an unjoined thread handle did not fail fast"
+            exit 1
+          fi
+
   coverage:
     name: Coverage (Ubuntu)
     runs-on: ubuntu-latest

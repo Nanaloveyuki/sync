@@ -14,12 +14,23 @@ pub(all) suberror SyncError {
   CondvarOperationFailed(Int)
   RwLockInitializationFailed(Int)
   RwLockOperationFailed(Int)
+  MutexOperationFailed(Int)
+  OnceInitializationFailed(Int)
+  OnceOperationFailed(Int)
+  WaitGroupInitializationFailed(Int)
+  WaitGroupOperationFailed(Int)
   ThreadCreationFailed(Int)
+  ThreadInitializationFailed(Int)
   ThreadJoinFailed(Int)
+  ThreadDetachFailed(Int)
   ThreadAlreadyJoined
+  ThreadAlreadyDetached
+  ThreadOperationInProgress
+  ThreadOperationFailed(Int)
   ThreadJoinSelf
   ThreadPanicked(String)
   ThreadPoolCreationFailed(Int)
+  ThreadPoolOperationFailed(Int)
   ThreadPoolClosed
   ThreadPoolWouldDeadlock
   ThreadPoolShutdownFromWorker

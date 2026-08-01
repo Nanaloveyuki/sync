@@ -2,6 +2,41 @@
 
 All notable changes to `sync` are documented in this file.
 
+## 0.6.0
+
+### Safety
+
+- Bound `ThreadPool` construction to 64 workers and 16,384 queued tasks in both
+  the MoonBit wrapper and native FFI boundary.
+- Return `ThreadPoolCreationFailed` when thread-pool core or queue allocation
+  fails instead of aborting through the shared fail-fast allocator.
+- Add regression coverage for values above both resource limits.
+
+## 0.5.0
+
+### Breaking
+
+- Make `unsafe.Thread` a `Unit`-returning handle. Generic result transport is
+  now explicit through `unsafe.spawn_unchecked` and `UnsafeThread[T]`.
+- Require every successful thread to be explicitly `join`ed or `detach`ed.
+  Dropping a still-joinable thread handle fails fast instead of implicitly
+  detaching the native thread.
+- Add `detach`, `is_finished`, `ThreadAlreadyDetached`,
+  `ThreadOperationInProgress`, and native thread lifecycle errors.
+- Propagate native initialization and operation failures from `Once`,
+  `WaitGroup`, `Mutex`, `ThreadPool`, and the remaining native synchronization
+  finalizers through `SyncError` or fail-fast termination where no safe return
+  path exists.
+
+### Safety
+
+- Keep arbitrary closure capture and generic result transport explicitly
+  unsafe-by-contract. The API does not establish a `Send`/`Sync` boundary for
+  MoonBit heap objects.
+- Serialize thread-pool lifecycle transitions and validate native cleanup
+  failures instead of silently continuing with an invalid synchronization
+  object.
+
 ## 0.4.0
 
 ### Breaking

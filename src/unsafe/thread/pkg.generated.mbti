@@ -8,19 +8,32 @@ import {
 // Values
 pub fn current_thread_id() -> UInt64
 
-pub fn[T] spawn(() -> T raise) -> Thread[T] raise @types.SyncError
+pub fn spawn(() -> Unit raise) -> Thread raise @types.SyncError
+
+pub fn[T] spawn_unchecked(() -> T raise) -> UnsafeThread[T] raise @types.SyncError
 
 pub fn yield_now() -> Unit
 
 // Errors
 
 // Types and methods
-pub struct Thread[T] {
+pub struct Thread {
   // private fields
 }
-pub fn[T] Thread::id(Self[T]) -> UInt64
-pub fn[T] Thread::join(Self[T]) -> T raise @types.SyncError
-pub fn[T] Thread::spawn(() -> T raise) -> Self[T] raise @types.SyncError
+pub fn Thread::detach(Self) -> Unit raise @types.SyncError
+pub fn Thread::id(Self) -> UInt64
+pub fn Thread::is_finished(Self) -> Bool raise @types.SyncError
+pub fn Thread::join(Self) -> Unit raise @types.SyncError
+pub fn Thread::spawn(() -> Unit raise) -> Self raise @types.SyncError
+
+pub struct UnsafeThread[T] {
+  // private fields
+}
+pub fn[T] UnsafeThread::detach(Self[T]) -> Unit raise @types.SyncError
+pub fn[T] UnsafeThread::id(Self[T]) -> UInt64
+pub fn[T] UnsafeThread::is_finished(Self[T]) -> Bool raise @types.SyncError
+pub fn[T] UnsafeThread::join(Self[T]) -> T raise @types.SyncError
+pub fn[T] UnsafeThread::spawn(() -> T raise) -> Self[T] raise @types.SyncError
 
 // Type aliases
 pub using @types {type SyncError}

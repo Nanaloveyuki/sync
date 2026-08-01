@@ -63,12 +63,12 @@ pub fn[T] Mutex::share(self : Mutex[T]) -> Mutex[T] {
 pub fn[T, R] Mutex::with_lock(
   self : Mutex[T],
   f : (MutexGuard[T]) -> R raise?,
-) -> R raise? {
+) -> R raise {
   ignore(self.marker)
   let lock_status = Ref::Ref(0)
   let raw = native_mutex_lock_get(self.handle, lock_status)
   if lock_status.val != 0 {
-    panic()
+    raise SyncError::MutexOperationFailed(lock_status.val)
   }
   let active = Ref::Ref(true)
   let lock_guard = {
@@ -83,7 +83,7 @@ pub fn[T, R] Mutex::with_lock(
       let unlock_status = Ref::Ref(0)
       native_mutex_release_unlock(self.handle, raw, unlock_status)
       if unlock_status.val != 0 {
-        panic()
+        raise SyncError::MutexOperationFailed(unlock_status.val)
       }
       raise err
     }
@@ -93,7 +93,7 @@ pub fn[T, R] Mutex::with_lock(
       let unlock_status = Ref::Ref(0)
       native_mutex_release_unlock(self.handle, raw, unlock_status)
       if unlock_status.val != 0 {
-        panic()
+        raise SyncError::MutexOperationFailed(unlock_status.val)
       }
       result
     }

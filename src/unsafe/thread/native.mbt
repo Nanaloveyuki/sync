@@ -31,7 +31,8 @@ priv type ThreadHandle
 priv type RawThreadState
 
 ///|
-extern "C" fn native_thread_new() -> ThreadHandle = "sync_thread_new"
+#borrow(status)
+extern "C" fn native_thread_new(status : Ref[Int]) -> ThreadHandle = "sync_thread_new"
 
 ///|
 #borrow(value)
@@ -59,6 +60,20 @@ extern "C" fn native_thread_join(
   value : ThreadHandle,
   status : Ref[Int],
 ) -> RawBox = "sync_thread_join"
+
+///|
+#borrow(value, status)
+extern "C" fn native_thread_detach(
+  value : ThreadHandle,
+  status : Ref[Int],
+) -> Unit = "sync_thread_detach"
+
+///|
+#borrow(value, status)
+extern "C" fn native_thread_is_finished(
+  value : ThreadHandle,
+  status : Ref[Int],
+) -> Bool = "sync_thread_is_finished"
 
 ///|
 #borrow(value)

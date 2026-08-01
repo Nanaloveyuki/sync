@@ -20,10 +20,10 @@ test "owned bytes channel transfers copied bytes from a worker" {
   let (sender, receiver) = owned_bytes_bounded(1)
   let worker_sender = sender.share()
   let worker = @thread.spawn(fn() raise {
-    worker_sender.send(b"worker payload")
+    ignore(worker_sender.send(b"worker payload"))
   })
   assert_eq(receiver.recv(), Some(b"worker payload"))
-  assert_true(worker.join())
+  worker.join()
 }
 
 ///|
@@ -31,7 +31,9 @@ test "owned bytes channel close wakes a blocked sender" {
   let (sender, receiver) = owned_bytes_bounded(1)
   assert_true(sender.send(b"queued"))
   let worker_sender = sender.share()
-  let worker = @thread.spawn(fn() raise { worker_sender.send(b"blocked") })
+  let worker = @thread.spawn_unchecked(fn() raise {
+    worker_sender.send(b"blocked")
+  })
   receiver.close()
   assert_false(worker.join())
 }
@@ -83,7 +85,9 @@ test "owned bytes channel blocking send waits for byte capacity" {
   )
   assert_true(sender.send(b"123456"))
   let worker_sender = sender.share()
-  let worker = @thread.spawn(fn() raise { worker_sender.send_checked(b"78901") })
+  let worker = @thread.spawn_unchecked(fn() raise {
+    worker_sender.send_checked(b"78901")
+  })
   assert_eq(receiver.recv(), Some(b"123456"))
   assert_eq(worker.join(), OwnedBytesSendResult::Sent)
   assert_eq(receiver.try_recv(), Received(b"78901"))

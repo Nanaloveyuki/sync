@@ -6,7 +6,14 @@
 pub using @types {type SyncError}
 
 ///|
-pub using @thread {type Thread, spawn, yield_now, current_thread_id}
+pub using @thread {
+  type Thread,
+  type UnsafeThread,
+  spawn,
+  spawn_unchecked,
+  yield_now,
+  current_thread_id,
+}
 
 ///|
 pub using @thread_pool {type ThreadPool, type TryExecuteResult}
