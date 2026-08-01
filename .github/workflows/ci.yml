@@ -134,14 +134,26 @@ jobs:
       - name: Verify dropped thread handles fail fast
         shell: bash
         run: |
+          set -euo pipefail
+          moon build src/test_programs/thread_drop_abort --target native --release --deny-warn
+          binary="_build/native/release/build/test_programs/thread_drop_abort/thread_drop_abort"
+          if [ ! -x "$binary" ]; then
+            echo "smoke binary was not produced: $binary"
+            exit 1
+          fi
           set +e
-          moon run src/test_programs/thread_drop_abort --target native --deny-warn
+          timeout --signal=KILL 30s "$binary"
           status=$?
           set -e
           if [ "$status" -eq 0 ]; then
             echo "an unjoined thread handle did not fail fast"
             exit 1
           fi
+          if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+            echo "dropped-handle smoke test timed out"
+            exit 1
+          fi
+          echo "dropped-handle smoke test exited with expected non-zero status: $status"
 
   coverage:
     name: Coverage (Ubuntu)
