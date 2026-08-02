@@ -11,6 +11,15 @@ typedef struct {
   sync_once_core_t *core;
 } sync_once_handle_t;
 
+static int32_t sync_once_test_next_init_error = 0;
+static int32_t sync_once_test_next_begin_error = 0;
+
+static int32_t sync_once_take_test_error(int32_t *next_error) {
+  int32_t status = *next_error;
+  *next_error = 0;
+  return status;
+}
+
 static void sync_once_abort_if_failed(int32_t status) {
   if (status != 0) {
     abort();
@@ -49,6 +58,13 @@ MOONBIT_FFI_EXPORT sync_once_handle_t *sync_once_new(int32_t *status) {
     free(core);
     return NULL;
   }
+  int32_t injected = sync_once_take_test_error(&sync_once_test_next_init_error);
+  if (injected != 0) {
+    sync_once_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
+    free(core);
+    *status = injected;
+    return NULL;
+  }
   *status = sync_os_cond_init(&core->cond);
   if (*status != 0) {
     sync_once_abort_if_failed(sync_os_mutex_destroy(&core->mutex));
@@ -68,6 +84,11 @@ MOONBIT_FFI_EXPORT int32_t sync_once_begin(
   int32_t *status
 ) {
   sync_once_core_t *core = value->core;
+  int32_t injected = sync_once_take_test_error(&sync_once_test_next_begin_error);
+  if (injected != 0) {
+    *status = injected;
+    return 0;
+  }
   *status = sync_os_mutex_lock(&core->mutex);
   if (*status != 0) {
     return 0;
@@ -103,6 +124,14 @@ MOONBIT_FFI_EXPORT void sync_once_complete(
   core->state = 2;
   sync_once_record_error(status, sync_os_cond_broadcast(&core->cond));
   sync_once_record_error(status, sync_os_mutex_unlock(&core->mutex));
+}
+
+MOONBIT_FFI_EXPORT void sync_once_test_fail_next_init(int32_t status) {
+  sync_once_test_next_init_error = status;
+}
+
+MOONBIT_FFI_EXPORT void sync_once_test_fail_next_begin(int32_t status) {
+  sync_once_test_next_begin_error = status;
 }
 
 MOONBIT_FFI_EXPORT void sync_once_poison(

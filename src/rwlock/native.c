@@ -10,6 +10,16 @@ typedef struct {
   sync_rwlock_core_t *core;
 } sync_rwlock_handle_t;
 
+static int32_t sync_rwlock_test_next_init_error = 0;
+static int32_t sync_rwlock_test_next_lock_error = 0;
+static int32_t sync_rwlock_test_next_unlock_error = 0;
+
+static int32_t sync_rwlock_take_test_error(int32_t *next_error) {
+  int32_t status = *next_error;
+  *next_error = 0;
+  return status;
+}
+
 static void sync_rwlock_abort_if_failed(int32_t status) {
   if (status != 0) {
     abort();
@@ -43,6 +53,13 @@ MOONBIT_FFI_EXPORT sync_rwlock_handle_t *sync_rwlock_new(int32_t *status) {
     free(core);
     return NULL;
   }
+  int32_t injected = sync_rwlock_take_test_error(&sync_rwlock_test_next_init_error);
+  if (injected != 0) {
+    sync_rwlock_abort_if_failed(sync_os_rwlock_destroy(&core->lock));
+    free(core);
+    *status = injected;
+    return NULL;
+  }
   core->initialized = 1;
   return sync_rwlock_wrap(core);
 }
@@ -53,17 +70,45 @@ MOONBIT_FFI_EXPORT sync_rwlock_handle_t *sync_rwlock_share(sync_rwlock_handle_t 
 }
 
 MOONBIT_FFI_EXPORT int32_t sync_rwlock_read_lock(sync_rwlock_handle_t *value) {
+  int32_t injected = sync_rwlock_take_test_error(&sync_rwlock_test_next_lock_error);
+  if (injected != 0) {
+    return injected;
+  }
   return sync_os_rwlock_read_lock(&value->core->lock);
 }
 
 MOONBIT_FFI_EXPORT int32_t sync_rwlock_read_unlock(sync_rwlock_handle_t *value) {
-  return sync_os_rwlock_read_unlock(&value->core->lock);
+  int32_t status = sync_os_rwlock_read_unlock(&value->core->lock);
+  if (status != 0) {
+    return status;
+  }
+  return sync_rwlock_take_test_error(&sync_rwlock_test_next_unlock_error);
 }
 
 MOONBIT_FFI_EXPORT int32_t sync_rwlock_write_lock(sync_rwlock_handle_t *value) {
+  int32_t injected = sync_rwlock_take_test_error(&sync_rwlock_test_next_lock_error);
+  if (injected != 0) {
+    return injected;
+  }
   return sync_os_rwlock_write_lock(&value->core->lock);
 }
 
 MOONBIT_FFI_EXPORT int32_t sync_rwlock_write_unlock(sync_rwlock_handle_t *value) {
-  return sync_os_rwlock_write_unlock(&value->core->lock);
+  int32_t status = sync_os_rwlock_write_unlock(&value->core->lock);
+  if (status != 0) {
+    return status;
+  }
+  return sync_rwlock_take_test_error(&sync_rwlock_test_next_unlock_error);
+}
+
+MOONBIT_FFI_EXPORT void sync_rwlock_test_fail_next_init(int32_t status) {
+  sync_rwlock_test_next_init_error = status;
+}
+
+MOONBIT_FFI_EXPORT void sync_rwlock_test_fail_next_lock(int32_t status) {
+  sync_rwlock_test_next_lock_error = status;
+}
+
+MOONBIT_FFI_EXPORT void sync_rwlock_test_fail_next_unlock(int32_t status) {
+  sync_rwlock_test_next_unlock_error = status;
 }

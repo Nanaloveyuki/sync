@@ -2,6 +2,23 @@
 
 All notable changes to `sync` are documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Transfer thread and thread-pool task closures with consuming ownership so
+  creator and worker threads do not concurrently mutate MoonBit's non-atomic
+  reference count during task handoff.
+- Release joined and detached thread tasks only after their callback has fully
+  returned, removing the intermittent leaks reported by LeakSanitizer.
+- Propagate native `ThreadPool::shutdown` status failures instead of silently
+  treating them as success.
+
+### Testing
+
+- Add private native failure injection for `Once`, `WaitGroup`, `RwLock`, and
+  `ThreadPool` initialization and operation error mappings.
+
 ## 0.6.0
 
 ### Safety

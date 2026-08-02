@@ -7,6 +7,14 @@ typedef void (*sync_call_closure_t)(void *);
 #define SYNC_THREAD_POOL_ALLOCATION_FAILED (-2)
 
 static int32_t sync_thread_pool_test_alloc_fail_after = -1;
+static int32_t sync_thread_pool_test_next_submit_error = 0;
+static int32_t sync_thread_pool_test_next_shutdown_error = 0;
+
+static int32_t sync_thread_pool_take_test_error(int32_t *next_error) {
+  int32_t status = *next_error;
+  *next_error = 0;
+  return status;
+}
 
 typedef struct sync_thread_pool_core_s {
   sync_arc_t refs;
@@ -304,6 +312,13 @@ static int32_t sync_thread_pool_submit_task(
   int32_t *error
 ) {
   sync_thread_pool_core_t *core = value->core;
+  *error = sync_thread_pool_take_test_error(
+    &sync_thread_pool_test_next_submit_error
+  );
+  if (*error != 0) {
+    moonbit_decref(task);
+    return 2;
+  }
   *error = sync_os_mutex_lock(&core->mutex);
   if (*error != 0) {
     moonbit_decref(task);
@@ -372,7 +387,12 @@ MOONBIT_FFI_EXPORT int32_t sync_thread_pool_shutdown(
   int32_t *status
 ) {
   sync_thread_pool_core_t *core = value->core;
-  *status = 0;
+  *status = sync_thread_pool_take_test_error(
+    &sync_thread_pool_test_next_shutdown_error
+  );
+  if (*status != 0) {
+    return 0;
+  }
   if (sync_current_thread_pool == core) {
     return -1;
   }
@@ -431,4 +451,12 @@ MOONBIT_FFI_EXPORT void sync_thread_pool_test_fail_alloc_after(
   int32_t successful_allocations
 ) {
   sync_thread_pool_test_alloc_fail_after = successful_allocations;
+}
+
+MOONBIT_FFI_EXPORT void sync_thread_pool_test_fail_next_submit(int32_t status) {
+  sync_thread_pool_test_next_submit_error = status;
+}
+
+MOONBIT_FFI_EXPORT void sync_thread_pool_test_fail_next_shutdown(int32_t status) {
+  sync_thread_pool_test_next_shutdown_error = status;
 }

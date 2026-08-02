@@ -50,6 +50,7 @@ pub fn ThreadPool::share(self : ThreadPool) -> ThreadPool raise SyncError {
 /// Attempts to enqueue a task without blocking.
 ///
 /// The closure is consumed whether submission succeeds or fails.
+#owned(task)
 pub fn ThreadPool::try_execute(
   self : ThreadPool,
   task : () -> Unit,
@@ -72,6 +73,7 @@ pub fn ThreadPool::try_execute(
 /// The closure is consumed in both cases.
 /// Calling this from one of the same pool's workers is rejected when the queue
 /// is full, because waiting there could deadlock every worker.
+#owned(task)
 pub fn ThreadPool::execute(
   self : ThreadPool,
   task : () -> Unit,
@@ -105,10 +107,11 @@ pub fn ThreadPool::close(self : ThreadPool) -> Unit raise SyncError {
 /// deadlocking. It is safe to call repeatedly from external threads.
 pub fn ThreadPool::shutdown(self : ThreadPool) -> Unit raise SyncError {
   let status = Ref::Ref(0)
-  if native_thread_pool_shutdown(self, status) != 0 {
-    if status.val != 0 {
-      raise SyncError::ThreadPoolOperationFailed(status.val)
-    }
+  let result = native_thread_pool_shutdown(self, status)
+  if status.val != 0 {
+    raise SyncError::ThreadPoolOperationFailed(status.val)
+  }
+  if result != 0 {
     raise SyncError::ThreadPoolShutdownFromWorker
   }
 }

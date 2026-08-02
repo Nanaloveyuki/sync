@@ -4,6 +4,15 @@ priv suberror WorkerTestError {
 } derive(Debug)
 
 ///|
+extern "C" fn native_rwlock_test_fail_next_init(status : Int) -> Unit = "sync_rwlock_test_fail_next_init"
+
+///|
+extern "C" fn native_rwlock_test_fail_next_lock(status : Int) -> Unit = "sync_rwlock_test_fail_next_lock"
+
+///|
+extern "C" fn native_rwlock_test_fail_next_unlock(status : Int) -> Unit = "sync_rwlock_test_fail_next_unlock"
+
+///|
 fn rwlock_test_reader(
   lock : RwLock,
   active : @atomic.AtomicInt,
@@ -169,4 +178,38 @@ test "rwlock writer excludes readers" {
   writer.join()
   reader.join()
   assert_eq(reader_entered.fetch_add(0), 1)
+}
+
+///|
+test "rwlock maps injected native failures and remains usable" {
+  native_rwlock_test_fail_next_init(678)
+  try {
+    ignore(RwLock::new())
+    fail("injected initialization failure should raise")
+  } catch {
+    SyncError::RwLockInitializationFailed(status) => assert_eq(status, 678)
+    _ => fail("unexpected initialization error")
+  }
+
+  let lock = RwLock::new()
+  let called = Ref::Ref(false)
+  native_rwlock_test_fail_next_lock(789)
+  try {
+    ignore(lock.with_read(fn() { called.val = true }))
+    fail("injected lock failure should raise")
+  } catch {
+    SyncError::RwLockOperationFailed(status) => assert_eq(status, 789)
+    _ => fail("unexpected lock error")
+  }
+  assert_false(called.val)
+
+  native_rwlock_test_fail_next_unlock(890)
+  try {
+    ignore(lock.with_write(fn() { 42 }))
+    fail("injected unlock failure should raise")
+  } catch {
+    SyncError::RwLockOperationFailed(status) => assert_eq(status, 890)
+    _ => fail("unexpected unlock error")
+  }
+  assert_eq(lock.with_read(fn() { 7 }), 7)
 }

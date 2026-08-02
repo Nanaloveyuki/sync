@@ -92,7 +92,9 @@ result. It still accepts an arbitrary closure because MoonBit has no static
 `Send`/`Sync` check, so its capture set must obey the contract above. A result
 thread is available only through the explicitly named
 `@unsafe.spawn_unchecked`, which returns `UnsafeThread[T]` and makes the
-unchecked result boundary visible at every call site.
+unchecked result boundary visible at every call site. Both entry points
+consume the submitted closure so the library can transfer its reference to the
+worker without overlapping creator and worker reference-count updates.
 
 ```moonbit nocheck
 let worker = try! @unsafe.spawn(fn() raise {
@@ -112,6 +114,7 @@ and does not replace `join` or `detach`.
 values raise `InvalidWorkerCount` or `InvalidCapacity` before native resources
 are created. If native pool construction cannot allocate its core or queue, it
 raises `ThreadPoolCreationFailed` instead of aborting on allocation failure.
+`execute` and `try_execute` consume their task closure on every outcome.
 
 ## 0.6 Migration
 
