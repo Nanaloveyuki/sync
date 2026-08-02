@@ -65,7 +65,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for package in atomic once wait_group rwlock channel unsafe/mutex unsafe/thread unsafe/channel unsafe/thread_pool; do
+          for package in atomic wait_group channel unsafe/once unsafe/rwlock unsafe/mutex unsafe/thread unsafe/channel unsafe/thread_pool; do
             moon test "src/$package" --target native --deny-warn
           done
 
@@ -135,8 +135,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          moon build src/test_programs/thread_drop_abort --target native --release --deny-warn
-          build_dir="_build/native/release/build/test_programs/thread_drop_abort"
+          moon build src/unsafe/test_programs/thread_drop_abort --target native --release --deny-warn
+          build_dir="_build/native/release/build/unsafe/test_programs/thread_drop_abort"
           binary="$(find "$build_dir" -maxdepth 1 -type f -perm -111 -print -quit)"
           if [ -z "$binary" ]; then
             echo "smoke binary was not produced in: $build_dir"

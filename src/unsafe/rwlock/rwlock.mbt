@@ -1,5 +1,5 @@
 ///|
-/// A native reader-writer lock without an associated MoonBit value.
+/// An unchecked native reader-writer lock without an associated MoonBit value.
 ///
 /// Multiple read callbacks may run concurrently, while a write callback is
 /// exclusive. Ordinary MoonBit objects must not be aliased across OS threads;

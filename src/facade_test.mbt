@@ -25,20 +25,11 @@ test "root facade preserves the public entry points" {
   assert_true(unsigned.compare_exchange(3U, 4U).exchanged)
   assert_eq(unsigned.fetch_add(1U), 4U)
 
-  let once = @sync.Once::new()
-  let _shared_once = once.share()
-  once.call_once(fn() {  })
-
   let group = @sync.WaitGroup::new()
   let _shared_group = group.share()
   group.add(1)
   group.done()
   group.wait()
-
-  let rwlock = @sync.RwLock::new()
-  let _shared_rwlock = rwlock.share()
-  assert_eq(rwlock.with_write(fn() { 1 }), 1)
-  assert_eq(rwlock.with_read(fn() { 2 }), 2)
 
   let (owned_sender, owned_receiver) = @sync.owned_bytes_bounded(1)
   let _shared_owned_sender = owned_sender.share()

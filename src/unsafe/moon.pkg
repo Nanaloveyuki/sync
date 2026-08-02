@@ -2,6 +2,8 @@ import {
   "Nanaloveyuki/sync/types",
   "Nanaloveyuki/sync/unsafe/channel",
   "Nanaloveyuki/sync/unsafe/mutex",
+  "Nanaloveyuki/sync/unsafe/once",
+  "Nanaloveyuki/sync/unsafe/rwlock",
   "Nanaloveyuki/sync/unsafe/thread",
   "Nanaloveyuki/sync/unsafe/thread_pool",
 }

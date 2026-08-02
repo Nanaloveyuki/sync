@@ -1,4 +1,4 @@
-#include "../internal/native_sync.h"
+#include "../../internal/native_sync.h"
 
 typedef struct {
   sync_arc_t refs;

@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Nanaloveyuki/sync/rwlock"
+package "Nanaloveyuki/sync/unsafe/rwlock"
 
 import {
   "Nanaloveyuki/sync/types",

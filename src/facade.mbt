@@ -11,13 +11,7 @@ pub using @atomic {
 }
 
 ///|
-pub using @once {type Once}
-
-///|
 pub using @wait_group {type WaitGroup}
-
-///|
-pub using @rwlock {type RwLock}
 
 ///|
 pub using @channel {

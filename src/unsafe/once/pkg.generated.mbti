@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Nanaloveyuki/sync/once"
+package "Nanaloveyuki/sync/unsafe/once"
 
 import {
   "Nanaloveyuki/sync/types",

@@ -1,4 +1,8 @@
 ///|
+/// An unchecked once-initialization primitive for OS threads.
+///
+/// The initializer may capture arbitrary MoonBit heap values, so callers must
+/// enforce the cross-thread ownership and aliasing boundary themselves.
 pub fn Once::new() -> Once raise SyncError {
   let status = Ref::Ref(0)
   let once = native_once_new(status)
@@ -15,6 +19,9 @@ pub fn Once::share(self : Once) -> Once {
 
 ///|
 /// Runs an initializer once. A raised error poisons this Once instance.
+///
+/// The callback runs on one of the calling threads and is not statically
+/// checked for thread-safe captures.
 pub fn Once::call_once(self : Once, f : () -> Unit raise?) -> Unit raise {
   let begin_status = Ref::Ref(0)
   match native_once_begin(self, begin_status) {
