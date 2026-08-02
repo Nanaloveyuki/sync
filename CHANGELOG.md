@@ -2,7 +2,7 @@
 
 All notable changes to `sync` are documented in this file.
 
-## Unreleased
+## 0.7.0
 
 ### Breaking
 

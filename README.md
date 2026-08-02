@@ -7,7 +7,7 @@ it is not an async runtime or a UI-thread dispatcher.
 ## Install
 
 ```sh
-moon add Nanaloveyuki/sync@0.6.0
+moon add Nanaloveyuki/sync@0.7.0
 ```
 
 Import the root facade from a consumer package:
@@ -120,12 +120,12 @@ are created. If native pool construction cannot allocate its core or queue, it
 raises `ThreadPoolCreationFailed` instead of aborting on allocation failure.
 `execute` and `try_execute` consume their task closure on every outcome.
 
-## Unreleased Migration
+## 0.7 Migration
 
 `Once` and `RwLock` are now explicitly unsafe because their callback capture
 sets cannot be constrained by MoonBit's current type system.
 
-| Before | Unreleased |
+| Before | 0.7 |
 | --- | --- |
 | `@sync.Once` | `@unsafe.Once` |
 | `@sync.RwLock` | `@unsafe.RwLock` |

@@ -1,6 +1,6 @@
 name = "Nanaloveyuki/sync"
 
-version = "0.6.0"
+version = "0.7.0"
 
 description = "Minimal native concurrency primitives for MoonBit."
 
@@ -15,3 +15,7 @@ keywords = [ "moonbit", "concurrency", "thread", "channel" ]
 preferred_target = "native"
 
 source = "src"
+
+options(
+  exclude: [ "tmp", "src/unsafe/test_programs" ],
+)
