@@ -1,5 +1,4 @@
 import {
-  "Nanaloveyuki/sync/channel" @safe_channel,
   "Nanaloveyuki/sync/types",
 }
 
@@ -8,3 +7,8 @@ import {
 } for "wbtest"
 
 supported_targets = "native"
+
+options(
+  "native-stub": [ "native.c" ],
+  targets: { "native.mbt": [ "native" ] },
+)

@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Nanaloveyuki/sync/test_programs/thread_drop_abort"
+package "Nanaloveyuki/sync/unsafe/test_programs/thread_drop_abort"
 
 // Values
 

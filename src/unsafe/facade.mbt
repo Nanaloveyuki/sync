@@ -2,7 +2,8 @@
 /// Explicit low-level native concurrency APIs.
 ///
 /// MoonBit does not enforce a Send/Sync boundary. Do not transfer aliased
-/// MoonBit heap objects or closures between OS threads through these APIs.
+/// MoonBit heap objects or closures between OS threads through these APIs,
+/// including through callback capture sets on `Once` and `RwLock`.
 pub using @types {type SyncError}
 
 ///|
@@ -17,6 +18,12 @@ pub using @thread {
 
 ///|
 pub using @thread_pool {type ThreadPool, type TryExecuteResult}
+
+///|
+pub using @once {type Once}
+
+///|
+pub using @rwlock {type RwLock}
 
 ///|
 pub using @channel {

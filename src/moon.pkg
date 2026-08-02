@@ -1,8 +1,6 @@
 import {
   "Nanaloveyuki/sync/atomic",
   "Nanaloveyuki/sync/channel",
-  "Nanaloveyuki/sync/once",
-  "Nanaloveyuki/sync/rwlock",
   "Nanaloveyuki/sync/types",
   "Nanaloveyuki/sync/wait_group",
 }

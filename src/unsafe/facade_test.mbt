@@ -17,6 +17,13 @@ test "unsafe facade exposes raw APIs explicitly" {
     2,
   )
 
+  let once = try! @unsafe.Once::new()
+  try! once.call_once(fn() {  })
+
+  let rwlock = try! @unsafe.RwLock::new()
+  assert_eq(try! rwlock.with_write(fn() { 1 }), 1)
+  assert_eq(try! rwlock.with_read(fn() { 2 }), 2)
+
   let worker = try! @unsafe.spawn(fn() {  })
   try! worker.join()
 }

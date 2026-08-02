@@ -4,6 +4,19 @@ All notable changes to `sync` are documented in this file.
 
 ## Unreleased
 
+### Breaking
+
+- Move `Once` and `RwLock` from the root facade and `sync/once` / `sync/rwlock`
+  packages to `sync/unsafe` and `sync/unsafe/once` / `sync/unsafe/rwlock`.
+  Their callback APIs cannot constrain captured MoonBit heap aliases without
+  language-level `Send` and `Sync` checks.
+
+### Safety
+
+- Compile the generic heap-payload channel entirely from `sync/unsafe/channel`
+  instead of retaining its native symbols through the copied `OwnedBytes`
+  package. The root channel package now contains only native-owned byte copies.
+
 ### Fixed
 
 - Transfer thread and thread-pool task closures with consuming ownership so

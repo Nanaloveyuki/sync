@@ -1,8 +1,8 @@
 ///|
-extern "C" fn native_channel_test_fail_next_init(status : Int) -> Unit = "sync_channel_test_fail_next_init"
+extern "C" fn native_channel_test_fail_next_init(status : Int) -> Unit = "sync_owned_bytes_channel_test_fail_next_init"
 
 ///|
-extern "C" fn native_channel_test_fail_next_operation(status : Int) -> Unit = "sync_channel_test_fail_next_operation"
+extern "C" fn native_channel_test_fail_next_operation(status : Int) -> Unit = "sync_owned_bytes_channel_test_fail_next_operation"
 
 ///|
 test "owned bytes channel copies and drains messages" {

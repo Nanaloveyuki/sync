@@ -5,6 +5,8 @@ import {
   "Nanaloveyuki/sync/types",
   "Nanaloveyuki/sync/unsafe/channel",
   "Nanaloveyuki/sync/unsafe/mutex",
+  "Nanaloveyuki/sync/unsafe/once",
+  "Nanaloveyuki/sync/unsafe/rwlock",
   "Nanaloveyuki/sync/unsafe/thread",
   "Nanaloveyuki/sync/unsafe/thread_pool",
 }
@@ -33,7 +35,11 @@ pub using @mutex {type Mutex}
 
 pub using @mutex {type MutexGuard}
 
+pub using @once {type Once}
+
 pub using @channel {type Receiver}
+
+pub using @rwlock {type RwLock}
 
 pub using @channel {type Sender}
 

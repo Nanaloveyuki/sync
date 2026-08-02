@@ -4,8 +4,6 @@ package "Nanaloveyuki/sync"
 import {
   "Nanaloveyuki/sync/atomic",
   "Nanaloveyuki/sync/channel",
-  "Nanaloveyuki/sync/once",
-  "Nanaloveyuki/sync/rwlock",
   "Nanaloveyuki/sync/types",
   "Nanaloveyuki/sync/wait_group",
 }
@@ -30,8 +28,6 @@ pub using @atomic {type CompareExchangeResult}
 
 pub using @atomic {type MemoryOrdering}
 
-pub using @once {type Once}
-
 pub using @channel {type OwnedBytesReceiver}
 
 pub using @channel {type OwnedBytesSendResult}
@@ -41,8 +37,6 @@ pub using @channel {type OwnedBytesSender}
 pub using @channel {type OwnedBytesTryRecvResult}
 
 pub using @channel {type OwnedBytesTrySendResult}
-
-pub using @rwlock {type RwLock}
 
 pub using @types {type SyncError}
 

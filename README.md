@@ -18,9 +18,10 @@ import {
 }
 ```
 
-The root facade intentionally contains only native handles and the copied
-`OwnedBytes` message path. Import `Nanaloveyuki/sync/unsafe` explicitly for
-OS-thread spawning, generic channels, generic mutexes, or thread pools.
+The root facade intentionally contains only primitive atomic values,
+`WaitGroup`, and the copied `OwnedBytes` message path. Import
+`Nanaloveyuki/sync/unsafe` explicitly for OS-thread spawning, generic channels,
+generic mutexes, callback-based `Once` / `RwLock`, or thread pools.
 
 ## Platform Support
 
@@ -83,9 +84,12 @@ match try! sender.send_checked(payload) {
 }
 ```
 
-`sync/unsafe` contains the generic bounded channel, generic mutex, threads,
-and thread pools. They remain useful for narrowly controlled native work, but
-are not a safe transfer boundary for IPC payloads or arbitrary closures.
+`sync/unsafe` contains callback-based `Once` and `RwLock`, the generic bounded
+channel, generic mutex, threads, and thread pools. They remain useful for
+narrowly controlled native work, but are not a safe transfer boundary for IPC
+payloads or arbitrary closures. `Once::call_once`, `RwLock::with_read`, and
+`RwLock::with_write` execute callbacks on a calling thread, but MoonBit cannot
+verify that those callbacks capture only thread-safe native handles.
 
 `@unsafe.spawn` is the default thread entry point and only allows a `Unit`
 result. It still accepts an arbitrary closure because MoonBit has no static
@@ -115,6 +119,20 @@ values raise `InvalidWorkerCount` or `InvalidCapacity` before native resources
 are created. If native pool construction cannot allocate its core or queue, it
 raises `ThreadPoolCreationFailed` instead of aborting on allocation failure.
 `execute` and `try_execute` consume their task closure on every outcome.
+
+## Unreleased Migration
+
+`Once` and `RwLock` are now explicitly unsafe because their callback capture
+sets cannot be constrained by MoonBit's current type system.
+
+| Before | Unreleased |
+| --- | --- |
+| `@sync.Once` | `@unsafe.Once` |
+| `@sync.RwLock` | `@unsafe.RwLock` |
+| `Nanaloveyuki/sync/once` | `Nanaloveyuki/sync/unsafe/once` |
+| `Nanaloveyuki/sync/rwlock` | `Nanaloveyuki/sync/unsafe/rwlock` |
+
+Atomic primitives, `WaitGroup`, and `OwnedBytes` remain in the root facade.
 
 ## 0.6 Migration
 
