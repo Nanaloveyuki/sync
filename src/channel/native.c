@@ -157,66 +157,75 @@ MOONBIT_FFI_EXPORT sync_channel_handle_t *sync_sender_share(
   return sync_channel_wrap(core, 1);
 }
 
-MOONBIT_FFI_EXPORT int32_t sync_sender_try_send(
+MOONBIT_FFI_EXPORT void *sync_sender_try_send(
   sync_channel_handle_t *value,
   void *message,
+  int32_t *result,
   int32_t *error
 ) {
   sync_channel_core_t *core = value->core;
   *error = sync_channel_test_take_next_operation_error();
   if (*error != 0) {
-    return 2;
+    *result = 2;
+    return message;
   }
   *error = sync_os_mutex_lock(&core->mutex);
   if (*error != 0) {
-    return 2;
+    *result = 2;
+    return message;
   }
   if (core->closed || !core->receiver_alive) {
     sync_record_error(error, sync_os_mutex_unlock(&core->mutex));
-    return 2;
+    *result = 2;
+    return message;
   }
   if (core->count == core->capacity) {
     sync_record_error(error, sync_os_mutex_unlock(&core->mutex));
-    return 1;
+    *result = 1;
+    return message;
   }
-  moonbit_incref(message);
   core->slots[core->tail] = message;
   core->tail = (core->tail + 1) % core->capacity;
   core->count += 1;
   sync_record_error(error, sync_os_cond_signal(&core->readable));
   sync_record_error(error, sync_os_mutex_unlock(&core->mutex));
-  return 0;
+  *result = 0;
+  return NULL;
 }
 
-MOONBIT_FFI_EXPORT int32_t sync_sender_send(
+MOONBIT_FFI_EXPORT void *sync_sender_send(
   sync_channel_handle_t *value,
   void *message,
+  int32_t *result,
   int32_t *error
 ) {
   sync_channel_core_t *core = value->core;
   *error = sync_os_mutex_lock(&core->mutex);
   if (*error != 0) {
-    return 2;
+    *result = 2;
+    return message;
   }
   while (core->count == core->capacity && !core->closed && core->receiver_alive) {
     int32_t wait_status = sync_os_cond_wait(&core->writable, &core->mutex);
     if (wait_status != 0) {
       sync_record_error(error, wait_status);
       sync_record_error(error, sync_os_mutex_unlock(&core->mutex));
-      return 2;
+      *result = 2;
+      return message;
     }
   }
   if (core->closed || !core->receiver_alive) {
     sync_record_error(error, sync_os_mutex_unlock(&core->mutex));
-    return 2;
+    *result = 2;
+    return message;
   }
-  moonbit_incref(message);
   core->slots[core->tail] = message;
   core->tail = (core->tail + 1) % core->capacity;
   core->count += 1;
   sync_record_error(error, sync_os_cond_signal(&core->readable));
   sync_record_error(error, sync_os_mutex_unlock(&core->mutex));
-  return 0;
+  *result = 0;
+  return NULL;
 }
 
 MOONBIT_FFI_EXPORT void sync_sender_close(sync_channel_handle_t *value, int32_t *error) {

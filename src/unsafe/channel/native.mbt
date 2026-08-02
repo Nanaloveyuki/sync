@@ -8,6 +8,7 @@ fn[T] erase_box(value : Ref[T]) -> RawBox = "%identity"
 fn[T] restore_box(value : RawBox) -> Ref[T] = "%identity"
 
 ///|
+#owned(value)
 fn[T] box_value(value : T) -> RawBox {
   erase_box(Ref::Ref(value))
 }
@@ -45,20 +46,24 @@ extern "C" fn native_sender_share(
 ) -> SenderHandle = "sync_sender_share"
 
 ///|
-#borrow(value, message, status)
+#borrow(value, result, status)
+#owned(message)
 extern "C" fn native_sender_try_send(
   value : SenderHandle,
   message : RawBox,
+  result : Ref[Int],
   status : Ref[Int],
-) -> Int = "sync_sender_try_send"
+) -> RawBox = "sync_sender_try_send"
 
 ///|
-#borrow(value, message, status)
+#borrow(value, result, status)
+#owned(message)
 extern "C" fn native_sender_send(
   value : SenderHandle,
   message : RawBox,
+  result : Ref[Int],
   status : Ref[Int],
-) -> Int = "sync_sender_send"
+) -> RawBox = "sync_sender_send"
 
 ///|
 #borrow(value, status)
