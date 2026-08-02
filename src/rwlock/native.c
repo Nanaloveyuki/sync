@@ -10,14 +10,12 @@ typedef struct {
   sync_rwlock_core_t *core;
 } sync_rwlock_handle_t;
 
-static int32_t sync_rwlock_test_next_init_error = 0;
-static int32_t sync_rwlock_test_next_lock_error = 0;
-static int32_t sync_rwlock_test_next_unlock_error = 0;
+static sync_test_atomic_t sync_rwlock_test_next_init_error = 0;
+static sync_test_atomic_t sync_rwlock_test_next_lock_error = 0;
+static sync_test_atomic_t sync_rwlock_test_next_unlock_error = 0;
 
-static int32_t sync_rwlock_take_test_error(int32_t *next_error) {
-  int32_t status = *next_error;
-  *next_error = 0;
-  return status;
+static int32_t sync_rwlock_take_test_error(sync_test_atomic_t *next_error) {
+  return sync_test_atomic_take(next_error);
 }
 
 static void sync_rwlock_abort_if_failed(int32_t status) {
@@ -102,13 +100,13 @@ MOONBIT_FFI_EXPORT int32_t sync_rwlock_write_unlock(sync_rwlock_handle_t *value)
 }
 
 MOONBIT_FFI_EXPORT void sync_rwlock_test_fail_next_init(int32_t status) {
-  sync_rwlock_test_next_init_error = status;
+  sync_test_atomic_store(&sync_rwlock_test_next_init_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_rwlock_test_fail_next_lock(int32_t status) {
-  sync_rwlock_test_next_lock_error = status;
+  sync_test_atomic_store(&sync_rwlock_test_next_lock_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_rwlock_test_fail_next_unlock(int32_t status) {
-  sync_rwlock_test_next_unlock_error = status;
+  sync_test_atomic_store(&sync_rwlock_test_next_unlock_error, status);
 }

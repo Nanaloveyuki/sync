@@ -11,13 +11,11 @@ typedef struct {
   sync_once_core_t *core;
 } sync_once_handle_t;
 
-static int32_t sync_once_test_next_init_error = 0;
-static int32_t sync_once_test_next_begin_error = 0;
+static sync_test_atomic_t sync_once_test_next_init_error = 0;
+static sync_test_atomic_t sync_once_test_next_begin_error = 0;
 
-static int32_t sync_once_take_test_error(int32_t *next_error) {
-  int32_t status = *next_error;
-  *next_error = 0;
-  return status;
+static int32_t sync_once_take_test_error(sync_test_atomic_t *next_error) {
+  return sync_test_atomic_take(next_error);
 }
 
 static void sync_once_abort_if_failed(int32_t status) {
@@ -127,11 +125,11 @@ MOONBIT_FFI_EXPORT void sync_once_complete(
 }
 
 MOONBIT_FFI_EXPORT void sync_once_test_fail_next_init(int32_t status) {
-  sync_once_test_next_init_error = status;
+  sync_test_atomic_store(&sync_once_test_next_init_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_once_test_fail_next_begin(int32_t status) {
-  sync_once_test_next_begin_error = status;
+  sync_test_atomic_store(&sync_once_test_next_begin_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_once_poison(

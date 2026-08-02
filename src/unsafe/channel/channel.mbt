@@ -55,25 +55,27 @@ pub fn[T] Sender::share(self : Sender[T]) -> Sender[T] raise SyncError {
 
 ///|
 /// Attempts to enqueue without blocking and returns ownership on failure.
+#owned(value)
 pub fn[T] Sender::try_send(
   self : Sender[T],
   value : T,
 ) -> TrySendResult[T] raise SyncError {
   ignore(self.marker)
   let raw = box_value(value)
+  let result = Ref::Ref(0)
   let status = Ref::Ref(0)
-  let result = native_sender_try_send(self.handle, raw, status)
+  let returned = native_sender_try_send(self.handle, raw, result, status)
   if status.val != 0 {
     raise SyncError::ChannelOperationFailed(status.val)
   }
-  match result {
+  match result.val {
     0 => Sent
     1 => {
-      let cell : Ref[T] = restore_box(raw)
+      let cell : Ref[T] = restore_box(returned)
       Full(cell.val)
     }
     _ => {
-      let cell : Ref[T] = restore_box(raw)
+      let cell : Ref[T] = restore_box(returned)
       Closed(cell.val)
     }
   }
@@ -81,21 +83,23 @@ pub fn[T] Sender::try_send(
 
 ///|
 /// Blocks until space is available or the channel closes.
+#owned(value)
 pub fn[T] Sender::send(
   self : Sender[T],
   value : T,
 ) -> Result[Unit, T] raise SyncError {
   ignore(self.marker)
   let raw = box_value(value)
+  let result = Ref::Ref(0)
   let status = Ref::Ref(0)
-  let result = native_sender_send(self.handle, raw, status)
+  let returned = native_sender_send(self.handle, raw, result, status)
   if status.val != 0 {
     raise SyncError::ChannelOperationFailed(status.val)
   }
-  if result == 0 {
+  if result.val == 0 {
     Ok(())
   } else {
-    let cell : Ref[T] = restore_box(raw)
+    let cell : Ref[T] = restore_box(returned)
     Err(cell.val)
   }
 }

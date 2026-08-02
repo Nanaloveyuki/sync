@@ -13,11 +13,18 @@ All notable changes to `sync` are documented in this file.
   returned, removing the intermittent leaks reported by LeakSanitizer.
 - Propagate native `ThreadPool::shutdown` status failures instead of silently
   treating them as success.
+- Transfer generic channel payload boxes directly from sender to receiver,
+  removing cross-thread reference-count races during successful sends while
+  preserving payload return on full or closed channels.
 
 ### Testing
 
 - Add private native failure injection for `Once`, `WaitGroup`, `RwLock`, and
   `ThreadPool` initialization and operation error mappings.
+- Add a shared native sanitizer runner and an independent Linux
+  ThreadSanitizer CI job with compiler/runtime preflight validation.
+- Make private native fault-injection controls atomic so concurrent production
+  operations do not race while whitebox injection is idle.
 
 ## 0.6.0
 

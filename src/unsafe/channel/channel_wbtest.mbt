@@ -19,8 +19,9 @@ test "bounded channel reports full empty and closed" {
 ///|
 test "bounded channel carries reference values" {
   let (sender, receiver) : (Sender[String], Receiver[String]) = bounded(2)
-  assert_eq(sender.send("hello"), Ok(()))
+  let worker = @thread.spawn(() => assert_eq(sender.send("hello"), Ok(())))
   assert_eq(receiver.recv(), Some("hello"))
+  worker.join()
 }
 
 ///|

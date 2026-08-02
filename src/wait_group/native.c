@@ -11,14 +11,12 @@ typedef struct {
   sync_wait_group_core_t *core;
 } sync_wait_group_handle_t;
 
-static int32_t sync_wait_group_test_next_init_error = 0;
-static int32_t sync_wait_group_test_next_add_error = 0;
-static int32_t sync_wait_group_test_next_wait_error = 0;
+static sync_test_atomic_t sync_wait_group_test_next_init_error = 0;
+static sync_test_atomic_t sync_wait_group_test_next_add_error = 0;
+static sync_test_atomic_t sync_wait_group_test_next_wait_error = 0;
 
-static int32_t sync_wait_group_take_test_error(int32_t *next_error) {
-  int32_t status = *next_error;
-  *next_error = 0;
-  return status;
+static int32_t sync_wait_group_take_test_error(sync_test_atomic_t *next_error) {
+  return sync_test_atomic_take(next_error);
 }
 
 static void sync_wait_group_abort_if_failed(int32_t status) {
@@ -143,13 +141,13 @@ MOONBIT_FFI_EXPORT void sync_wait_group_wait(
 }
 
 MOONBIT_FFI_EXPORT void sync_wait_group_test_fail_next_init(int32_t status) {
-  sync_wait_group_test_next_init_error = status;
+  sync_test_atomic_store(&sync_wait_group_test_next_init_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_wait_group_test_fail_next_add(int32_t status) {
-  sync_wait_group_test_next_add_error = status;
+  sync_test_atomic_store(&sync_wait_group_test_next_add_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_wait_group_test_fail_next_wait(int32_t status) {
-  sync_wait_group_test_next_wait_error = status;
+  sync_test_atomic_store(&sync_wait_group_test_next_wait_error, status);
 }

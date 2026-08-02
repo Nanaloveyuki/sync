@@ -6,14 +6,27 @@ typedef void (*sync_call_closure_t)(void *);
 #define SYNC_THREAD_POOL_MAX_CAPACITY 16384
 #define SYNC_THREAD_POOL_ALLOCATION_FAILED (-2)
 
-static int32_t sync_thread_pool_test_alloc_fail_after = -1;
-static int32_t sync_thread_pool_test_next_submit_error = 0;
-static int32_t sync_thread_pool_test_next_shutdown_error = 0;
+static sync_test_atomic_t sync_thread_pool_test_alloc_fail_after = -1;
+static sync_test_atomic_t sync_thread_pool_test_next_submit_error = 0;
+static sync_test_atomic_t sync_thread_pool_test_next_shutdown_error = 0;
 
-static int32_t sync_thread_pool_take_test_error(int32_t *next_error) {
-  int32_t status = *next_error;
-  *next_error = 0;
-  return status;
+static int32_t sync_thread_pool_take_test_error(sync_test_atomic_t *next_error) {
+  return sync_test_atomic_take(next_error);
+}
+
+static int32_t sync_thread_pool_test_should_fail_alloc(void) {
+  int32_t current = sync_test_atomic_load(&sync_thread_pool_test_alloc_fail_after);
+  while (current >= 0) {
+    int32_t next = current == 0 ? -1 : current - 1;
+    if (sync_test_atomic_compare_exchange(
+      &sync_thread_pool_test_alloc_fail_after,
+      &current,
+      next
+    )) {
+      return current == 0;
+    }
+  }
+  return 0;
 }
 
 typedef struct sync_thread_pool_core_s {
@@ -65,12 +78,8 @@ static void sync_thread_pool_unlock_or_abort(sync_thread_pool_core_t *core) {
 }
 
 static void *sync_thread_pool_try_alloc(size_t size) {
-  if (sync_thread_pool_test_alloc_fail_after == 0) {
-    sync_thread_pool_test_alloc_fail_after = -1;
+  if (sync_thread_pool_test_should_fail_alloc()) {
     return NULL;
-  }
-  if (sync_thread_pool_test_alloc_fail_after > 0) {
-    sync_thread_pool_test_alloc_fail_after -= 1;
   }
   return sync_try_alloc(size);
 }
@@ -450,13 +459,16 @@ MOONBIT_FFI_EXPORT int32_t sync_thread_pool_pending_count(
 MOONBIT_FFI_EXPORT void sync_thread_pool_test_fail_alloc_after(
   int32_t successful_allocations
 ) {
-  sync_thread_pool_test_alloc_fail_after = successful_allocations;
+  sync_test_atomic_store(
+    &sync_thread_pool_test_alloc_fail_after,
+    successful_allocations
+  );
 }
 
 MOONBIT_FFI_EXPORT void sync_thread_pool_test_fail_next_submit(int32_t status) {
-  sync_thread_pool_test_next_submit_error = status;
+  sync_test_atomic_store(&sync_thread_pool_test_next_submit_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_thread_pool_test_fail_next_shutdown(int32_t status) {
-  sync_thread_pool_test_next_shutdown_error = status;
+  sync_test_atomic_store(&sync_thread_pool_test_next_shutdown_error, status);
 }
