@@ -18,6 +18,7 @@ pub struct UnsafeThread[T] {
 }
 
 ///|
+#owned(task)
 fn[T] spawn_raw(task : () -> T raise) -> ThreadHandle raise SyncError {
   let creation_status = Ref::Ref(0)
   let handle = native_thread_new(creation_status)
@@ -83,18 +84,24 @@ fn is_finished_raw(handle : ThreadHandle) -> Bool raise SyncError {
 
 ///|
 /// Spawns a native OS thread with a `Unit` result.
+/// The task closure is consumed by this call.
+#owned(task)
 pub fn spawn(task : () -> Unit raise) -> Thread raise SyncError {
   { handle: spawn_raw(task) }
 }
 
 ///|
 /// Spawns a native OS thread with a `Unit` result.
+/// The task closure is consumed by this call.
+#owned(task)
 pub fn Thread::spawn(task : () -> Unit raise) -> Thread raise SyncError {
   spawn(task)
 }
 
 ///|
 /// Spawns an explicitly unchecked thread returning `T`.
+/// The task closure is consumed by this call.
+#owned(task)
 pub fn[T] spawn_unchecked(
   task : () -> T raise,
 ) -> UnsafeThread[T] raise SyncError {
@@ -103,6 +110,8 @@ pub fn[T] spawn_unchecked(
 
 ///|
 /// Spawns an explicitly unchecked thread returning `T`.
+/// The task closure is consumed by this call.
+#owned(task)
 pub fn[T] UnsafeThread::spawn(
   task : () -> T raise,
 ) -> UnsafeThread[T] raise SyncError {

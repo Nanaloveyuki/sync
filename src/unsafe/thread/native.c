@@ -55,6 +55,12 @@ static void sync_thread_unlock_or_abort(sync_thread_core_t *core) {
   sync_thread_abort_if_failed(sync_os_mutex_unlock(&core->mutex));
 }
 
+static void *sync_thread_take_task(sync_thread_core_t *core) {
+  void *task = core->task;
+  core->task = NULL;
+  return task;
+}
+
 static void sync_thread_core_release(sync_thread_core_t *core) {
   if (sync_arc_dec(&core->refs) != 0) {
     return;
@@ -122,10 +128,17 @@ static void *sync_thread_main(void *arg) {
 #endif
   sync_thread_core_t *core = (sync_thread_core_t *)arg;
   core->call(core->task);
-  moonbit_decref(core->task);
+  /* Release the task only after its creator-side ownership handoff is complete. */
   sync_thread_lock_or_abort(core);
-  core->task = NULL;
+  core->finished = 1;
+  void *task = NULL;
+  if (core->state == SYNC_THREAD_DETACHED) {
+    task = sync_thread_take_task(core);
+  }
   sync_thread_unlock_or_abort(core);
+  if (task != NULL) {
+    moonbit_decref(task);
+  }
   sync_thread_core_release(core);
 #if defined(_WIN32)
   return 0;
@@ -200,7 +213,6 @@ MOONBIT_FFI_EXPORT void sync_thread_complete(sync_thread_core_t *state, void *re
   } else {
     moonbit_decref(result);
   }
-  state->finished = 1;
   sync_thread_unlock_or_abort(state);
 }
 
@@ -272,8 +284,12 @@ MOONBIT_FFI_EXPORT void *sync_thread_join(sync_thread_handle_t *value, int32_t *
   sync_thread_lock_or_abort(core);
   void *result = core->result;
   core->result = NULL;
+  void *task = sync_thread_take_task(core);
   core->state = SYNC_THREAD_JOINED;
   sync_thread_unlock_or_abort(core);
+  if (task != NULL) {
+    moonbit_decref(task);
+  }
   *status = 0;
   return result;
 }
@@ -328,7 +344,14 @@ MOONBIT_FFI_EXPORT void sync_thread_detach(sync_thread_handle_t *value, int32_t 
 #endif
   sync_thread_lock_or_abort(core);
   core->state = SYNC_THREAD_DETACHED;
+  void *task = NULL;
+  if (core->finished) {
+    task = sync_thread_take_task(core);
+  }
   sync_thread_unlock_or_abort(core);
+  if (task != NULL) {
+    moonbit_decref(task);
+  }
   *status = 0;
 }
 

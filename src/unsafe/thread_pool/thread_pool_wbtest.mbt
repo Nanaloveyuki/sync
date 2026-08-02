@@ -17,6 +17,12 @@ extern "C" fn native_thread_pool_test_fail_alloc_after(
 ) -> Unit = "sync_thread_pool_test_fail_alloc_after"
 
 ///|
+extern "C" fn native_thread_pool_test_fail_next_submit(status : Int) -> Unit = "sync_thread_pool_test_fail_next_submit"
+
+///|
+extern "C" fn native_thread_pool_test_fail_next_shutdown(status : Int) -> Unit = "sync_thread_pool_test_fail_next_shutdown"
+
+///|
 test "thread pool runs a fixed set of workers and drains on shutdown" {
   let pool = ThreadPool::new(4, 8)
   let started = @atomic.AtomicInt::new(0)
@@ -216,6 +222,32 @@ test "thread pool reports allocation failures" {
     SyncError::ThreadPoolCreationFailed(status) => assert_eq(status, -2)
     _ => fail("unexpected queue allocation error")
   }
+}
+
+///|
+test "thread pool maps injected operation failures and remains usable" {
+  let pool = ThreadPool::new(1, 1)
+  let called = Ref::Ref(false)
+  native_thread_pool_test_fail_next_submit(901)
+  try {
+    pool.execute(fn() { called.val = true })
+    fail("injected submit failure should raise")
+  } catch {
+    SyncError::ThreadPoolOperationFailed(status) => assert_eq(status, 901)
+    _ => fail("unexpected submit error")
+  }
+  assert_false(called.val)
+
+  native_thread_pool_test_fail_next_shutdown(912)
+  try {
+    pool.shutdown()
+    fail("injected shutdown failure should raise")
+  } catch {
+    SyncError::ThreadPoolOperationFailed(status) => assert_eq(status, 912)
+    _ => fail("unexpected shutdown error")
+  }
+  assert_false(pool.is_closed())
+  pool.shutdown()
 }
 
 ///|
