@@ -192,8 +192,14 @@ moon check --target native --deny-warn
 moon test --target native --deny-warn
 ```
 
-On Linux, run the native sanitizer workflow locally with:
+On a supported native Linux host, run the native sanitizer workflows with:
 
 ```sh
 python3 scripts/run-asan.py --repo-root .
+python3 scripts/run-tsan.py --repo-root .
 ```
+
+The runners first verify that the selected compiler and sanitizer runtime can
+start a trivial executable, then use temporary package configuration and build
+directories. ASan/UBSan and ThreadSanitizer run separately because their
+compiler runtimes cannot be combined.

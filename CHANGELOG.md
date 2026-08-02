@@ -18,6 +18,8 @@ All notable changes to `sync` are documented in this file.
 
 - Add private native failure injection for `Once`, `WaitGroup`, `RwLock`, and
   `ThreadPool` initialization and operation error mappings.
+- Add a shared native sanitizer runner and an independent Linux
+  ThreadSanitizer CI job with compiler/runtime preflight validation.
 
 ## 0.6.0
 
