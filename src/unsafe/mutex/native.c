@@ -12,9 +12,9 @@ typedef struct {
   sync_mutex_core_t *core;
 } sync_mutex_handle_t;
 
-static int32_t sync_mutex_test_next_init_error = 0;
-static int32_t sync_condvar_test_next_init_error = 0;
-static int32_t sync_condvar_test_next_notify_error = 0;
+static sync_test_atomic_t sync_mutex_test_next_init_error = 0;
+static sync_test_atomic_t sync_condvar_test_next_init_error = 0;
+static sync_test_atomic_t sync_condvar_test_next_notify_error = 0;
 
 static void sync_mutex_abort_if_failed(int32_t status) {
   if (status != 0) {
@@ -49,10 +49,8 @@ MOONBIT_FFI_EXPORT sync_mutex_handle_t *sync_mutex_new(
   sync_mutex_core_t *core = (sync_mutex_core_t *)sync_alloc(sizeof(sync_mutex_core_t));
   core->refs = 1;
   core->value = value;
-  if (sync_mutex_test_next_init_error != 0) {
-    *status = sync_mutex_test_next_init_error;
-    sync_mutex_test_next_init_error = 0;
-  } else {
+  *status = sync_test_atomic_take(&sync_mutex_test_next_init_error);
+  if (*status == 0) {
     *status = sync_os_mutex_init(&core->mutex);
   }
   if (*status != 0) {
@@ -122,10 +120,8 @@ static sync_cond_handle_t *sync_cond_wrap(sync_cond_core_t *core) {
 MOONBIT_FFI_EXPORT sync_cond_handle_t *sync_condvar_new(int32_t *status) {
   sync_cond_core_t *core = (sync_cond_core_t *)sync_alloc(sizeof(sync_cond_core_t));
   core->refs = 1;
-  if (sync_condvar_test_next_init_error != 0) {
-    *status = sync_condvar_test_next_init_error;
-    sync_condvar_test_next_init_error = 0;
-  } else {
+  *status = sync_test_atomic_take(&sync_condvar_test_next_init_error);
+  if (*status == 0) {
     *status = sync_os_cond_init(&core->cond);
   }
   if (*status != 0) {
@@ -157,31 +153,29 @@ MOONBIT_FFI_EXPORT int32_t sync_condvar_wait(
 }
 
 MOONBIT_FFI_EXPORT int32_t sync_condvar_notify_one(sync_cond_handle_t *value) {
-  if (sync_condvar_test_next_notify_error != 0) {
-    int32_t status = sync_condvar_test_next_notify_error;
-    sync_condvar_test_next_notify_error = 0;
+  int32_t status = sync_test_atomic_take(&sync_condvar_test_next_notify_error);
+  if (status != 0) {
     return status;
   }
   return sync_os_cond_signal(&value->core->cond);
 }
 
 MOONBIT_FFI_EXPORT int32_t sync_condvar_notify_all(sync_cond_handle_t *value) {
-  if (sync_condvar_test_next_notify_error != 0) {
-    int32_t status = sync_condvar_test_next_notify_error;
-    sync_condvar_test_next_notify_error = 0;
+  int32_t status = sync_test_atomic_take(&sync_condvar_test_next_notify_error);
+  if (status != 0) {
     return status;
   }
   return sync_os_cond_broadcast(&value->core->cond);
 }
 
 MOONBIT_FFI_EXPORT void sync_mutex_test_fail_next_init(int32_t status) {
-  sync_mutex_test_next_init_error = status;
+  sync_test_atomic_store(&sync_mutex_test_next_init_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_condvar_test_fail_next_init(int32_t status) {
-  sync_condvar_test_next_init_error = status;
+  sync_test_atomic_store(&sync_condvar_test_next_init_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_condvar_test_fail_next_notify(int32_t status) {
-  sync_condvar_test_next_notify_error = status;
+  sync_test_atomic_store(&sync_condvar_test_next_notify_error, status);
 }

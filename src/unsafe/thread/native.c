@@ -37,9 +37,9 @@ typedef struct {
   sync_thread_core_t *core;
 } sync_thread_handle_t;
 
-static int32_t sync_thread_test_next_start_error = 0;
-static int32_t sync_thread_test_next_join_error = 0;
-static int32_t sync_thread_test_next_detach_error = 0;
+static sync_test_atomic_t sync_thread_test_next_start_error = 0;
+static sync_test_atomic_t sync_thread_test_next_join_error = 0;
+static sync_test_atomic_t sync_thread_test_next_detach_error = 0;
 
 static void sync_thread_abort_if_failed(int32_t status) {
   if (status != 0) {
@@ -156,16 +156,15 @@ MOONBIT_FFI_EXPORT int32_t sync_thread_start(
   core->call = call;
   core->task = task;
   sync_arc_inc(&core->refs);
-  if (sync_thread_test_next_start_error != 0) {
-    int32_t status = sync_thread_test_next_start_error;
-    sync_thread_test_next_start_error = 0;
+  int32_t injected = sync_test_atomic_take(&sync_thread_test_next_start_error);
+  if (injected != 0) {
     core->task = NULL;
     moonbit_decref(task);
     sync_thread_lock_or_abort(core);
     core->state = SYNC_THREAD_FAILED;
     sync_thread_unlock_or_abort(core);
     sync_thread_core_release(core);
-    return status;
+    return injected;
   }
 #if defined(_WIN32)
   DWORD id = 0;
@@ -247,9 +246,9 @@ MOONBIT_FFI_EXPORT void *sync_thread_join(sync_thread_handle_t *value, int32_t *
     sync_thread_unlock_or_abort(core);
     return NULL;
   }
-  if (sync_thread_test_next_join_error != 0) {
-    *status = sync_thread_test_next_join_error;
-    sync_thread_test_next_join_error = 0;
+  int32_t injected = sync_test_atomic_take(&sync_thread_test_next_join_error);
+  if (injected != 0) {
+    *status = injected;
     sync_thread_unlock_or_abort(core);
     return NULL;
   }
@@ -314,8 +313,7 @@ MOONBIT_FFI_EXPORT void sync_thread_detach(sync_thread_handle_t *value, int32_t 
     return;
   }
   core->state = SYNC_THREAD_DETACHING;
-  int32_t injected = sync_thread_test_next_detach_error;
-  sync_thread_test_next_detach_error = 0;
+  int32_t injected = sync_test_atomic_take(&sync_thread_test_next_detach_error);
   sync_thread_unlock_or_abort(core);
   if (injected != 0) {
     *status = injected;
@@ -373,15 +371,15 @@ MOONBIT_FFI_EXPORT int32_t sync_thread_is_finished(
 }
 
 MOONBIT_FFI_EXPORT void sync_thread_test_fail_next_start(int32_t status) {
-  sync_thread_test_next_start_error = status;
+  sync_test_atomic_store(&sync_thread_test_next_start_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_thread_test_fail_next_join(int32_t status) {
-  sync_thread_test_next_join_error = status;
+  sync_test_atomic_store(&sync_thread_test_next_join_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_thread_test_fail_next_detach(int32_t status) {
-  sync_thread_test_next_detach_error = status;
+  sync_test_atomic_store(&sync_thread_test_next_detach_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_thread_test_abort_if_unjoined(void) {

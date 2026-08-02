@@ -14,13 +14,11 @@ static void sync_channel_abort_if_failed(int32_t status) {
   }
 }
 
-static int32_t sync_channel_test_next_init_error = 0;
-static int32_t sync_channel_test_next_operation_error = 0;
+static sync_test_atomic_t sync_channel_test_next_init_error = 0;
+static sync_test_atomic_t sync_channel_test_next_operation_error = 0;
 
 static int32_t sync_channel_test_take_next_operation_error(void) {
-  int32_t status = sync_channel_test_next_operation_error;
-  sync_channel_test_next_operation_error = 0;
-  return status;
+  return sync_test_atomic_take(&sync_channel_test_next_operation_error);
 }
 
 typedef struct {
@@ -102,10 +100,8 @@ MOONBIT_FFI_EXPORT sync_channel_handle_t *sync_channel_new(
   core->capacity = capacity;
   core->senders = 1;
   core->slots = (void **)sync_alloc(sync_array_size_or_abort(capacity, sizeof(void *)));
-  if (sync_channel_test_next_init_error != 0) {
-    *status = sync_channel_test_next_init_error;
-    sync_channel_test_next_init_error = 0;
-  } else {
+  *status = sync_test_atomic_take(&sync_channel_test_next_init_error);
+  if (*status == 0) {
     *status = sync_os_mutex_init(&core->mutex);
   }
   if (*status != 0) {
@@ -449,10 +445,8 @@ MOONBIT_FFI_EXPORT sync_owned_bytes_channel_handle_t *sync_owned_bytes_channel_n
   core->slots = (sync_owned_bytes_message_t **)sync_alloc(
     sync_array_size_or_abort(capacity, sizeof(sync_owned_bytes_message_t *))
   );
-  if (sync_channel_test_next_init_error != 0) {
-    *status = sync_channel_test_next_init_error;
-    sync_channel_test_next_init_error = 0;
-  } else {
+  *status = sync_test_atomic_take(&sync_channel_test_next_init_error);
+  if (*status == 0) {
     *status = sync_os_mutex_init(&core->mutex);
   }
   if (*status != 0) {
@@ -699,9 +693,9 @@ MOONBIT_FFI_EXPORT int32_t sync_owned_bytes_receiver_capacity(
 }
 
 MOONBIT_FFI_EXPORT void sync_channel_test_fail_next_init(int32_t status) {
-  sync_channel_test_next_init_error = status;
+  sync_test_atomic_store(&sync_channel_test_next_init_error, status);
 }
 
 MOONBIT_FFI_EXPORT void sync_channel_test_fail_next_operation(int32_t status) {
-  sync_channel_test_next_operation_error = status;
+  sync_test_atomic_store(&sync_channel_test_next_operation_error, status);
 }

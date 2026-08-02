@@ -20,6 +20,8 @@ All notable changes to `sync` are documented in this file.
   `ThreadPool` initialization and operation error mappings.
 - Add a shared native sanitizer runner and an independent Linux
   ThreadSanitizer CI job with compiler/runtime preflight validation.
+- Make private native fault-injection controls atomic so concurrent production
+  operations do not race while whitebox injection is idle.
 
 ## 0.6.0
 

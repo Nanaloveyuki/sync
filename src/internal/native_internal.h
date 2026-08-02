@@ -18,6 +18,7 @@
 #include <windows.h>
 
 typedef volatile LONG sync_arc_t;
+typedef volatile LONG sync_test_atomic_t;
 
 static inline int32_t sync_arc_inc(sync_arc_t *value) {
   return (int32_t)InterlockedIncrement(value);
@@ -26,8 +27,34 @@ static inline int32_t sync_arc_inc(sync_arc_t *value) {
 static inline int32_t sync_arc_dec(sync_arc_t *value) {
   return (int32_t)InterlockedDecrement(value);
 }
+
+static inline int32_t sync_test_atomic_load(sync_test_atomic_t *value) {
+  return (int32_t)InterlockedCompareExchange(value, 0, 0);
+}
+
+static inline void sync_test_atomic_store(sync_test_atomic_t *value, int32_t next) {
+  (void)InterlockedExchange(value, (LONG)next);
+}
+
+static inline int32_t sync_test_atomic_take(sync_test_atomic_t *value) {
+  return (int32_t)InterlockedExchange(value, 0);
+}
+
+static inline int32_t sync_test_atomic_compare_exchange(
+  sync_test_atomic_t *value,
+  int32_t *expected,
+  int32_t desired
+) {
+  LONG previous = InterlockedCompareExchange(value, (LONG)desired, (LONG)*expected);
+  if (previous == (LONG)*expected) {
+    return 1;
+  }
+  *expected = (int32_t)previous;
+  return 0;
+}
 #else
 typedef int32_t sync_arc_t;
+typedef int32_t sync_test_atomic_t;
 
 static inline int32_t sync_arc_inc(sync_arc_t *value) {
   return __atomic_add_fetch(value, 1, __ATOMIC_SEQ_CST);
@@ -35,6 +62,33 @@ static inline int32_t sync_arc_inc(sync_arc_t *value) {
 
 static inline int32_t sync_arc_dec(sync_arc_t *value) {
   return __atomic_sub_fetch(value, 1, __ATOMIC_SEQ_CST);
+}
+
+static inline int32_t sync_test_atomic_load(sync_test_atomic_t *value) {
+  return __atomic_load_n(value, __ATOMIC_SEQ_CST);
+}
+
+static inline void sync_test_atomic_store(sync_test_atomic_t *value, int32_t next) {
+  __atomic_store_n(value, next, __ATOMIC_SEQ_CST);
+}
+
+static inline int32_t sync_test_atomic_take(sync_test_atomic_t *value) {
+  return __atomic_exchange_n(value, 0, __ATOMIC_SEQ_CST);
+}
+
+static inline int32_t sync_test_atomic_compare_exchange(
+  sync_test_atomic_t *value,
+  int32_t *expected,
+  int32_t desired
+) {
+  return __atomic_compare_exchange_n(
+    value,
+    expected,
+    desired,
+    0,
+    __ATOMIC_SEQ_CST,
+    __ATOMIC_SEQ_CST
+  );
 }
 #endif
 
