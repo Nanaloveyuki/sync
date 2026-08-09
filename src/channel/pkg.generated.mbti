@@ -56,4 +56,3 @@ pub(all) enum OwnedBytesTrySendResult {
 pub using @types {type SyncError}
 
 // Traits
-

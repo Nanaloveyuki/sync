@@ -21,4 +21,3 @@ pub fn WaitGroup::wait(Self) -> Unit raise @types.SyncError
 pub using @types {type SyncError}
 
 // Traits
-

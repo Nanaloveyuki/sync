@@ -20,4 +20,3 @@ pub fn[R] RwLock::with_write(Self, () -> R raise?) -> R raise
 pub using @types {type SyncError}
 
 // Traits
-
