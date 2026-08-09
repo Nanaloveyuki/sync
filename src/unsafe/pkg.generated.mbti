@@ -58,4 +58,3 @@ pub using @channel {type TrySendResult}
 pub using @thread {type UnsafeThread}
 
 // Traits
-

@@ -7,7 +7,7 @@ it is not an async runtime or a UI-thread dispatcher.
 ## Install
 
 ```sh
-moon add Nanaloveyuki/sync@0.7.0
+moon add Nanaloveyuki/sync@0.7.1
 ```
 
 Import the root facade from a consumer package:

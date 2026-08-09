@@ -45,4 +45,3 @@ pub(all) enum TrySendResult[T] {
 pub using @types {type SyncError}
 
 // Traits
-

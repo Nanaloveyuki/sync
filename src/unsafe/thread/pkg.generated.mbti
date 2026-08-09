@@ -39,4 +39,3 @@ pub fn[T] UnsafeThread::spawn(() -> T raise) -> Self[T] raise @types.SyncError
 pub using @types {type SyncError}
 
 // Traits
-

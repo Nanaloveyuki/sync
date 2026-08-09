@@ -2,6 +2,15 @@
 
 All notable changes to `sync` are documented in this file.
 
+## 0.7.1
+
+### Toolchain
+
+- Update the pinned stable MoonBit toolchain to `moon 0.1.20260803` /
+  `moonc 0.10.6+80dc50f24`.
+- Regenerate package interfaces with the updated toolchain. The public API is
+  unchanged.
+
 ## 0.7.0
 
 ### Breaking

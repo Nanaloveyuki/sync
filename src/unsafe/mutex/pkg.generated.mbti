@@ -35,4 +35,3 @@ pub fn[T, R] MutexGuard::with_value(Self[T], (@ref.Ref[T]) -> R raise?) -> R rai
 pub using @types {type SyncError}
 
 // Traits
-

@@ -43,4 +43,3 @@ pub using @types {type SyncError}
 pub using @wait_group {type WaitGroup}
 
 // Traits
-
