@@ -77,27 +77,24 @@ pub fn[T, R] Mutex::with_lock(
     active,
     marker: type_marker,
   }
-  try f(lock_guard) catch {
-    err => {
+  let result = {
+    errdefer {
       active.val = false
       let unlock_status = Ref::Ref(0)
       native_mutex_release_unlock(self.handle, raw, unlock_status)
       if unlock_status.val != 0 {
         raise SyncError::MutexOperationFailed(unlock_status.val)
       }
-      raise err
     }
-  } noraise {
-    result => {
-      active.val = false
-      let unlock_status = Ref::Ref(0)
-      native_mutex_release_unlock(self.handle, raw, unlock_status)
-      if unlock_status.val != 0 {
-        raise SyncError::MutexOperationFailed(unlock_status.val)
-      }
-      result
-    }
+    f(lock_guard)
   }
+  active.val = false
+  let unlock_status = Ref::Ref(0)
+  native_mutex_release_unlock(self.handle, raw, unlock_status)
+  if unlock_status.val != 0 {
+    raise SyncError::MutexOperationFailed(unlock_status.val)
+  }
+  result
 }
 
 ///|

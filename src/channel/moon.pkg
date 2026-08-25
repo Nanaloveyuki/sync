@@ -5,6 +5,8 @@ import {
 import {
   "Nanaloveyuki/sync/unsafe/thread",
   "moonbitlang/core/bench",
+  "moonbitlang/core/quickcheck",
+  "moonbitlang/core/quickcheck/shrink",
 } for "test"
 
 import {

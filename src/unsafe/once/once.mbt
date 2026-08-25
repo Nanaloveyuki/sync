@@ -28,25 +28,23 @@ pub fn Once::call_once(self : Once, f : () -> Unit raise?) -> Unit raise {
     _ if begin_status.val != 0 =>
       raise SyncError::OnceOperationFailed(begin_status.val)
     0 => ()
-    1 =>
-      try f() catch {
-        err => {
+    1 => {
+      let _ = {
+        errdefer {
           let poison_status = Ref::Ref(0)
           native_once_poison(self, poison_status)
           if poison_status.val != 0 {
             raise SyncError::OnceOperationFailed(poison_status.val)
           }
-          raise err
         }
-      } noraise {
-        _ => {
-          let complete_status = Ref::Ref(0)
-          native_once_complete(self, complete_status)
-          if complete_status.val != 0 {
-            raise SyncError::OnceOperationFailed(complete_status.val)
-          }
-        }
+        f()
       }
+      let complete_status = Ref::Ref(0)
+      native_once_complete(self, complete_status)
+      if complete_status.val != 0 {
+        raise SyncError::OnceOperationFailed(complete_status.val)
+      }
+    }
     _ => raise SyncError::OncePoisoned
   }
 }

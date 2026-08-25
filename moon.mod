@@ -15,7 +15,3 @@ keywords = [ "moonbit", "concurrency", "thread", "channel" ]
 preferred_target = "native"
 
 source = "src"
-
-options(
-  exclude: [ "tmp", "src/unsafe/test_programs" ],
-)

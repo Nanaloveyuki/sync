@@ -31,23 +31,13 @@ pub fn[R] RwLock::with_read(self : RwLock, f : () -> R raise?) -> R raise {
   if lock_status != 0 {
     raise SyncError::RwLockOperationFailed(lock_status)
   }
-  try f() catch {
-    err => {
-      let unlock_status = native_rwlock_read_unlock(self)
-      if unlock_status != 0 {
-        raise SyncError::RwLockOperationFailed(unlock_status)
-      }
-      raise err
-    }
-  } noraise {
-    result => {
-      let unlock_status = native_rwlock_read_unlock(self)
-      if unlock_status != 0 {
-        raise SyncError::RwLockOperationFailed(unlock_status)
-      }
-      result
+  defer {
+    let unlock_status = native_rwlock_read_unlock(self)
+    if unlock_status != 0 {
+      raise SyncError::RwLockOperationFailed(unlock_status)
     }
   }
+  f()
 }
 
 ///|
@@ -57,21 +47,11 @@ pub fn[R] RwLock::with_write(self : RwLock, f : () -> R raise?) -> R raise {
   if lock_status != 0 {
     raise SyncError::RwLockOperationFailed(lock_status)
   }
-  try f() catch {
-    err => {
-      let unlock_status = native_rwlock_write_unlock(self)
-      if unlock_status != 0 {
-        raise SyncError::RwLockOperationFailed(unlock_status)
-      }
-      raise err
-    }
-  } noraise {
-    result => {
-      let unlock_status = native_rwlock_write_unlock(self)
-      if unlock_status != 0 {
-        raise SyncError::RwLockOperationFailed(unlock_status)
-      }
-      result
+  defer {
+    let unlock_status = native_rwlock_write_unlock(self)
+    if unlock_status != 0 {
+      raise SyncError::RwLockOperationFailed(unlock_status)
     }
   }
+  f()
 }

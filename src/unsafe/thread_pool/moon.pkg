@@ -4,6 +4,7 @@ import {
 
 import {
   "Nanaloveyuki/sync/atomic",
+  "moonbitlang/core/quickcheck",
 } for "test"
 
 import {
