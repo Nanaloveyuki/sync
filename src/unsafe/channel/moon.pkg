@@ -6,6 +6,11 @@ import {
   "Nanaloveyuki/sync/unsafe/thread",
 } for "wbtest"
 
+import {
+  "moonbitlang/core/quickcheck",
+  "moonbitlang/core/quickcheck/shrink",
+} for "test"
+
 supported_targets = "native"
 
 options(

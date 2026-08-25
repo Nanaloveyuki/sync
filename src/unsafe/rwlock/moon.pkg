@@ -4,6 +4,7 @@ import {
 
 import {
   "Nanaloveyuki/sync/atomic",
+  "moonbitlang/core/quickcheck",
   "Nanaloveyuki/sync/unsafe/thread",
 } for "wbtest"
 
