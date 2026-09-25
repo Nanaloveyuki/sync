@@ -3,9 +3,9 @@ let owned_bytes_bench_messages_per_producer = 4_096
 
 ///|
 fn owned_bytes_bench_receive_exact(
-  receiver : OwnedBytesReceiver,
+  receiver : @channel.OwnedBytesReceiver,
   expected : Int,
-) -> Int raise SyncError {
+) -> Int raise @channel.SyncError {
   let mut received = 0
   while received < expected {
     match receiver.recv() {
@@ -18,8 +18,8 @@ fn owned_bytes_bench_receive_exact(
 
 ///|
 fn owned_bytes_bench_spawn_worker(
-  command_receiver : OwnedBytesReceiver,
-  data_sender : OwnedBytesSender,
+  command_receiver : @channel.OwnedBytesReceiver,
+  data_sender : @channel.OwnedBytesSender,
 ) -> @thread.Thread {
   try! @thread.spawn(fn() raise {
     let payload = Bytes::make(64, b'\x00')
@@ -40,7 +40,7 @@ fn owned_bytes_bench_spawn_worker(
 ///|
 test "bench owned bytes 1p1c 64B" (b : @bench.T) {
   b.bench(name="owned_bytes/1p1c/64B", count=30, fn() {
-    let (sender, receiver) = try! owned_bytes_bounded(1_024)
+    let (sender, receiver) = try! @channel.owned_bytes_bounded(1_024)
     let worker_sender = try! sender.share()
     let worker = try! @thread.spawn(fn() raise {
       let payload = Bytes::make(64, b'\x00')
@@ -60,8 +60,8 @@ test "bench owned bytes 1p1c 64B" (b : @bench.T) {
 
 ///|
 test "bench owned bytes steady 1p1c 64B" (b : @bench.T) {
-  let (command_sender, command_receiver) = try! owned_bytes_bounded(1)
-  let (data_sender, data_receiver) = try! owned_bytes_bounded(1_024)
+  let (command_sender, command_receiver) = try! @channel.owned_bytes_bounded(1)
+  let (data_sender, data_receiver) = try! @channel.owned_bytes_bounded(1_024)
   let worker = owned_bytes_bench_spawn_worker(
     command_receiver,
     data_sender.share(),
@@ -94,7 +94,7 @@ test "bench owned bytes steady 1p1c 64B" (b : @bench.T) {
 ///|
 test "bench owned bytes 4p1c 64B" (b : @bench.T) {
   b.bench(name="owned_bytes/4p1c/64B", count=30, fn() {
-    let (sender, receiver) = try! owned_bytes_bounded(1_024)
+    let (sender, receiver) = try! @channel.owned_bytes_bounded(1_024)
     let workers : Array[@thread.Thread] = []
     for _ in 0..<4 {
       let worker_sender = try! sender.share()
@@ -122,11 +122,13 @@ test "bench owned bytes 4p1c 64B" (b : @bench.T) {
 
 ///|
 test "bench owned bytes steady 4p1c 64B" (b : @bench.T) {
-  let (data_sender, data_receiver) = try! owned_bytes_bounded(1_024)
-  let command_senders : Array[OwnedBytesSender] = []
+  let (data_sender, data_receiver) = try! @channel.owned_bytes_bounded(1_024)
+  let command_senders : Array[@channel.OwnedBytesSender] = []
   let workers : Array[@thread.Thread] = []
   for _ in 0..<4 {
-    let (command_sender, command_receiver) = try! owned_bytes_bounded(1)
+    let (command_sender, command_receiver) = try! @channel.owned_bytes_bounded(
+      1,
+    )
     command_senders.push(command_sender)
     workers.push(
       owned_bytes_bench_spawn_worker(command_receiver, data_sender.share()),

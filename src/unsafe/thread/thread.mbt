@@ -87,7 +87,7 @@ fn is_finished_raw(handle : ThreadHandle) -> Bool raise SyncError {
 /// The task closure is consumed by this call.
 #owned(task)
 pub fn spawn(task : () -> Unit raise) -> Thread raise SyncError {
-  { handle: spawn_raw(task) }
+  { handle: spawn_raw(task), }
 }
 
 ///|
@@ -105,7 +105,7 @@ pub fn Thread::spawn(task : () -> Unit raise) -> Thread raise SyncError {
 pub fn[T] spawn_unchecked(
   task : () -> T raise,
 ) -> UnsafeThread[T] raise SyncError {
-  { handle: spawn_raw(task), marker: type_marker }
+  { handle: spawn_raw(task), marker: type_marker, }
 }
 
 ///|

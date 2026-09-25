@@ -1,5 +1,6 @@
 import {
   "Nanaloveyuki/sync/types",
+  "moonbitlang/core/debug",
 }
 
 import {

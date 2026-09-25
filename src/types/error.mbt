@@ -36,3 +36,7 @@ pub(all) suberror SyncError {
   ThreadPoolShutdownFromWorker
   OncePoisoned
 } derive(Debug)
+
+///|
+#doc(hidden)
+pub extend SyncError with @debug.Debug::{to_repr}

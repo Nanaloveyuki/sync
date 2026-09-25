@@ -44,14 +44,14 @@ pub fn[T] Mutex::new(value : T) -> Mutex[T] raise SyncError {
   if status.val != 0 {
     raise SyncError::MutexInitializationFailed(status.val)
   }
-  { handle, marker: type_marker }
+  { handle, marker: type_marker, }
 }
 
 ///|
 /// Creates an independent wrapper for use by another OS thread.
 pub fn[T] Mutex::share(self : Mutex[T]) -> Mutex[T] {
   ignore(self.marker)
-  { handle: native_mutex_share(self.handle), marker: type_marker }
+  { handle: native_mutex_share(self.handle), marker: type_marker, }
 }
 
 ///|

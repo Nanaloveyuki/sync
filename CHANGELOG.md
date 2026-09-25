@@ -2,6 +2,15 @@
 
 All notable changes to `sync` are documented in this file.
 
+## 0.7.2
+
+### Toolchain
+
+- Update the pinned stable MoonBit toolchain to `moon 0.1.20260920` /
+  `moonc 0.10.14+7d59c7ec9`.
+- Make derived `Eq` and `Debug` methods explicit with `extend` so the new
+  toolchain no longer promotes them implicitly. The public API is unchanged.
+
 ## 0.7.1
 
 ### Toolchain

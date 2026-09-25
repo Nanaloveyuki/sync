@@ -67,8 +67,8 @@ pub fn owned_bytes_bounded_with_limits(
     raise SyncError::ChannelOperationFailed(receiver_status.val)
   }
   (
-    { handle: sender, max_message_bytes, max_queued_bytes },
-    { handle: receiver },
+    { handle: sender, max_message_bytes, max_queued_bytes, },
+    { handle: receiver, },
   )
 }
 

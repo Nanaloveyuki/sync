@@ -7,3 +7,11 @@ pub(all) enum TryExecuteResult {
   QueueFull
   PoolClosed
 } derive(Eq, Debug)
+
+///|
+#doc(hidden)
+pub extend TryExecuteResult with Eq::{equal, not_equal}
+
+///|
+#doc(hidden)
+pub extend TryExecuteResult with @debug.Debug::{to_repr}

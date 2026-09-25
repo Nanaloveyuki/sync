@@ -118,7 +118,7 @@ pub fn AtomicBool::compare_exchange(
     success.code(),
     failure.code(),
   )
-  { observed: (packed & 1UL) != 0, exchanged: packed_exchanged(packed) }
+  { observed: (packed & 1UL) != 0, exchanged: packed_exchanged(packed), }
 }
 
 ///|

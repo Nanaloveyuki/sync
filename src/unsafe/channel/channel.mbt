@@ -36,8 +36,8 @@ pub fn[T] bounded(capacity : Int) -> (Sender[T], Receiver[T]) raise SyncError {
     raise SyncError::ChannelOperationFailed(receiver_status.val)
   }
   (
-    { handle: sender, marker: type_marker },
-    { handle: receiver, marker: type_marker },
+    { handle: sender, marker: type_marker, },
+    { handle: receiver, marker: type_marker, },
   )
 }
 
@@ -50,7 +50,7 @@ pub fn[T] Sender::share(self : Sender[T]) -> Sender[T] raise SyncError {
   if status.val != 0 {
     raise SyncError::ChannelOperationFailed(status.val)
   }
-  { handle, marker: type_marker }
+  { handle, marker: type_marker, }
 }
 
 ///|

@@ -17,6 +17,14 @@ pub(all) enum MemoryOrdering {
 } derive(Eq, Debug)
 
 ///|
+#doc(hidden)
+pub extend MemoryOrdering with Eq::{equal, not_equal}
+
+///|
+#doc(hidden)
+pub extend MemoryOrdering with @debug.Debug::{to_repr}
+
+///|
 fn MemoryOrdering::code(self : MemoryOrdering) -> Int {
   match self {
     Relaxed => 0
@@ -32,3 +40,11 @@ pub struct CompareExchangeResult[T] {
   observed : T
   exchanged : Bool
 } derive(Eq, Debug)
+
+///|
+#doc(hidden)
+pub extend CompareExchangeResult with Eq::{equal, not_equal}
+
+///|
+#doc(hidden)
+pub extend CompareExchangeResult with @debug.Debug::{to_repr}
