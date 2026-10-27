@@ -7,7 +7,7 @@ import {
 }
 
 // Values
-pub fn[T] bounded(Int) -> (Sender[T], Receiver[T]) raise @types.SyncError
+pub fn[T] bounded(Int32) -> (Sender[T], Receiver[T]) raise @types.SyncError
 
 // Errors
 
@@ -15,9 +15,9 @@ pub fn[T] bounded(Int) -> (Sender[T], Receiver[T]) raise @types.SyncError
 pub struct Receiver[T] {
   // private fields
 }
-pub fn[T] Receiver::capacity(Self[T]) -> Int
+pub fn[T] Receiver::capacity(Self[T]) -> Int32
 pub fn[T] Receiver::close(Self[T]) -> Unit raise @types.SyncError
-pub fn[T] Receiver::length(Self[T]) -> Int raise @types.SyncError
+pub fn[T] Receiver::length(Self[T]) -> Int32 raise @types.SyncError
 pub fn[T] Receiver::recv(Self[T]) -> T? raise @types.SyncError
 pub fn[T] Receiver::try_recv(Self[T]) -> TryRecvResult[T] raise @types.SyncError
 

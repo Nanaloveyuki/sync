@@ -28,7 +28,7 @@ type Condvar
 #borrow(status)
 extern "C" fn native_mutex_new(
   value : RawBox,
-  status : Ref[Int],
+  status : Ref[Int32],
 ) -> MutexHandle = "sync_mutex_new"
 
 ///|
@@ -39,7 +39,7 @@ extern "C" fn native_mutex_share(value : MutexHandle) -> MutexHandle = "sync_mut
 #borrow(value, status)
 extern "C" fn native_mutex_lock_get(
   value : MutexHandle,
-  status : Ref[Int],
+  status : Ref[Int32],
 ) -> RawBox = "sync_mutex_lock_get"
 
 ///|
@@ -48,12 +48,12 @@ extern "C" fn native_mutex_lock_get(
 extern "C" fn native_mutex_release_unlock(
   value : MutexHandle,
   box : RawBox,
-  status : Ref[Int],
+  status : Ref[Int32],
 ) -> Unit = "sync_mutex_release_unlock"
 
 ///|
 #borrow(status)
-extern "C" fn native_condvar_new(status : Ref[Int]) -> Condvar = "sync_condvar_new"
+extern "C" fn native_condvar_new(status : Ref[Int32]) -> Condvar = "sync_condvar_new"
 
 ///|
 #borrow(value)
@@ -61,12 +61,15 @@ extern "C" fn native_condvar_share(value : Condvar) -> Condvar = "sync_condvar_s
 
 ///|
 #borrow(value, mutex)
-extern "C" fn native_condvar_wait(value : Condvar, mutex : MutexHandle) -> Int = "sync_condvar_wait"
+extern "C" fn native_condvar_wait(
+  value : Condvar,
+  mutex : MutexHandle,
+) -> Int32 = "sync_condvar_wait"
 
 ///|
 #borrow(value)
-extern "C" fn native_condvar_notify_one(value : Condvar) -> Int = "sync_condvar_notify_one"
+extern "C" fn native_condvar_notify_one(value : Condvar) -> Int32 = "sync_condvar_notify_one"
 
 ///|
 #borrow(value)
-extern "C" fn native_condvar_notify_all(value : Condvar) -> Int = "sync_condvar_notify_all"
+extern "C" fn native_condvar_notify_all(value : Condvar) -> Int32 = "sync_condvar_notify_all"

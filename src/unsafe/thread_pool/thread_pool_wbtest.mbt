@@ -13,14 +13,16 @@ fn pool_test_blocking_task(
 
 ///|
 extern "C" fn native_thread_pool_test_fail_alloc_after(
-  successful_allocations : Int,
+  successful_allocations : Int32,
 ) -> Unit = "sync_thread_pool_test_fail_alloc_after"
 
 ///|
-extern "C" fn native_thread_pool_test_fail_next_submit(status : Int) -> Unit = "sync_thread_pool_test_fail_next_submit"
+extern "C" fn native_thread_pool_test_fail_next_submit(status : Int32) -> Unit = "sync_thread_pool_test_fail_next_submit"
 
 ///|
-extern "C" fn native_thread_pool_test_fail_next_shutdown(status : Int) -> Unit = "sync_thread_pool_test_fail_next_shutdown"
+extern "C" fn native_thread_pool_test_fail_next_shutdown(
+  status : Int32,
+) -> Unit = "sync_thread_pool_test_fail_next_shutdown"
 
 ///|
 test "thread pool runs a fixed set of workers and drains on shutdown" {

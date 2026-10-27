@@ -4,13 +4,13 @@ priv suberror WorkerTestError {
 } derive(Debug)
 
 ///|
-extern "C" fn native_rwlock_test_fail_next_init(status : Int) -> Unit = "sync_rwlock_test_fail_next_init"
+extern "C" fn native_rwlock_test_fail_next_init(status : Int32) -> Unit = "sync_rwlock_test_fail_next_init"
 
 ///|
-extern "C" fn native_rwlock_test_fail_next_lock(status : Int) -> Unit = "sync_rwlock_test_fail_next_lock"
+extern "C" fn native_rwlock_test_fail_next_lock(status : Int32) -> Unit = "sync_rwlock_test_fail_next_lock"
 
 ///|
-extern "C" fn native_rwlock_test_fail_next_unlock(status : Int) -> Unit = "sync_rwlock_test_fail_next_unlock"
+extern "C" fn native_rwlock_test_fail_next_unlock(status : Int32) -> Unit = "sync_rwlock_test_fail_next_unlock"
 
 ///|
 fn rwlock_test_reader(

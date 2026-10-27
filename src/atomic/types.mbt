@@ -25,7 +25,7 @@ pub extend MemoryOrdering with Eq::{equal, not_equal}
 pub extend MemoryOrdering with @debug.Debug::{to_repr}
 
 ///|
-fn MemoryOrdering::code(self : MemoryOrdering) -> Int {
+fn MemoryOrdering::code(self : MemoryOrdering) -> Int32 {
   match self {
     Relaxed => 0
     Acquire => 1

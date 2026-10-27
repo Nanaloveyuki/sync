@@ -1,11 +1,11 @@
 ///|
-extern "C" fn native_wait_group_test_fail_next_init(status : Int) -> Unit = "sync_wait_group_test_fail_next_init"
+extern "C" fn native_wait_group_test_fail_next_init(status : Int32) -> Unit = "sync_wait_group_test_fail_next_init"
 
 ///|
-extern "C" fn native_wait_group_test_fail_next_add(status : Int) -> Unit = "sync_wait_group_test_fail_next_add"
+extern "C" fn native_wait_group_test_fail_next_add(status : Int32) -> Unit = "sync_wait_group_test_fail_next_add"
 
 ///|
-extern "C" fn native_wait_group_test_fail_next_wait(status : Int) -> Unit = "sync_wait_group_test_fail_next_wait"
+extern "C" fn native_wait_group_test_fail_next_wait(status : Int32) -> Unit = "sync_wait_group_test_fail_next_wait"
 
 ///|
 test "wait group waits for workers" {

@@ -5,7 +5,7 @@ priv suberror MutexPropertyError {
 
 ///|
 priv enum MutexOperation {
-  Add(Int)
+  Add(Int32)
   Fail
   Read
 } derive(Debug)
@@ -55,7 +55,7 @@ test "mutex remains usable after generated callback failures" {
           }
           Read => ()
         }
-        let current : Int = mutex.with_lock(fn(lock_guard) {
+        let current : Int32 = mutex.with_lock(fn(lock_guard) {
           lock_guard.with_value(fn(value) { value.val })
         })
         guard current == expected else { return false }

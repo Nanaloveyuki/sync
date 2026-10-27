@@ -204,6 +204,15 @@ shutdown must not run on a UI event-loop thread.
 
 ## Verification
 
+Development and CI use the compiler archive in `.moonbit-toolchain`:
+`0.10.17+d971670cd`, with `moon 0.1.20261023` and its matching core library.
+
+```sh
+curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$(cat .moonbit-toolchain)"
+moon version --all
+```
+
+
 ```sh
 moon fmt --check
 moon check --target native --deny-warn

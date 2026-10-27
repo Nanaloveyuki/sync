@@ -4,8 +4,8 @@ let owned_bytes_bench_messages_per_producer = 4_096
 ///|
 fn owned_bytes_bench_receive_exact(
   receiver : @channel.OwnedBytesReceiver,
-  expected : Int,
-) -> Int raise @channel.SyncError {
+  expected : Int32,
+) -> Int32 raise @channel.SyncError {
   let mut received = 0
   while received < expected {
     match receiver.recv() {

@@ -1,10 +1,10 @@
 ///|
 priv enum AtomicOperation {
   Load
-  Store(Int)
-  Swap(Int)
-  FetchAdd(Int)
-  CompareExchange(Int, Int)
+  Store(Int32)
+  Swap(Int32)
+  FetchAdd(Int32)
+  CompareExchange(Int32, Int32)
 } derive(Debug)
 
 ///|

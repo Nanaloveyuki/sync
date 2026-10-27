@@ -9,9 +9,9 @@ import {
 }
 
 // Values
-pub fn owned_bytes_bounded(Int) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
+pub fn owned_bytes_bounded(Int32) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
 
-pub fn owned_bytes_bounded_with_limits(Int, max_message_bytes~ : Int, max_queued_bytes~ : Int) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
+pub fn owned_bytes_bounded_with_limits(Int32, max_message_bytes~ : Int32, max_queued_bytes~ : Int32) -> (@channel.OwnedBytesSender, @channel.OwnedBytesReceiver) raise @types.SyncError
 
 // Errors
 

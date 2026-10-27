@@ -21,7 +21,7 @@ fn validate_store_order(order : MemoryOrdering) -> Unit raise SyncError {
 }
 
 ///|
-fn failure_rank(order : MemoryOrdering) -> Int {
+fn failure_rank(order : MemoryOrdering) -> Int32 {
   match order {
     Relaxed => 0
     Acquire => 1
@@ -31,7 +31,7 @@ fn failure_rank(order : MemoryOrdering) -> Int {
 }
 
 ///|
-fn success_failure_rank(order : MemoryOrdering) -> Int {
+fn success_failure_rank(order : MemoryOrdering) -> Int32 {
   match order {
     Relaxed | Release => 0
     Acquire | AcqRel => 1
@@ -58,7 +58,7 @@ fn packed_exchanged(value : UInt64) -> Bool {
 }
 
 ///|
-fn packed_observed_uint(value : UInt64) -> UInt {
+fn packed_observed_uint(value : UInt64) -> UInt32 {
   (value & 0xFFFF_FFFFUL).to_uint()
 }
 
@@ -77,7 +77,7 @@ pub fn AtomicBool::share(self : AtomicBool) -> AtomicBool {
 ///|
 pub fn AtomicBool::load(
   self : AtomicBool,
-  order? : MemoryOrdering = SeqCst,
+  order~ : MemoryOrdering = SeqCst,
 ) -> Bool raise SyncError {
   validate_load_order(order)
   native_atomic_bool_load(self, order.code())
@@ -87,7 +87,7 @@ pub fn AtomicBool::load(
 pub fn AtomicBool::store(
   self : AtomicBool,
   value : Bool,
-  order? : MemoryOrdering = SeqCst,
+  order~ : MemoryOrdering = SeqCst,
 ) -> Unit raise SyncError {
   validate_store_order(order)
   native_atomic_bool_store(self, value, order.code())
@@ -97,7 +97,7 @@ pub fn AtomicBool::store(
 pub fn AtomicBool::swap(
   self : AtomicBool,
   value : Bool,
-  order? : MemoryOrdering = SeqCst,
+  order~ : MemoryOrdering = SeqCst,
 ) -> Bool {
   native_atomic_bool_swap(self, value, order.code())
 }
@@ -107,8 +107,8 @@ pub fn AtomicBool::compare_exchange(
   self : AtomicBool,
   current : Bool,
   next : Bool,
-  success? : MemoryOrdering = SeqCst,
-  failure? : MemoryOrdering = SeqCst,
+  success~ : MemoryOrdering = SeqCst,
+  failure~ : MemoryOrdering = SeqCst,
 ) -> CompareExchangeResult[Bool] raise SyncError {
   validate_compare_exchange_orders(success, failure)
   let packed = native_atomic_bool_compare_exchange(
@@ -123,7 +123,7 @@ pub fn AtomicBool::compare_exchange(
 
 ///|
 /// Creates a 32-bit signed atomic integer.
-pub fn AtomicInt::new(value : Int) -> AtomicInt {
+pub fn AtomicInt::new(value : Int32) -> AtomicInt {
   native_atomic_int_new(value)
 }
 
@@ -136,8 +136,8 @@ pub fn AtomicInt::share(self : AtomicInt) -> AtomicInt {
 ///|
 pub fn AtomicInt::load(
   self : AtomicInt,
-  order? : MemoryOrdering = SeqCst,
-) -> Int raise SyncError {
+  order~ : MemoryOrdering = SeqCst,
+) -> Int32 raise SyncError {
   validate_load_order(order)
   native_atomic_int_load(self, order.code())
 }
@@ -145,8 +145,8 @@ pub fn AtomicInt::load(
 ///|
 pub fn AtomicInt::store(
   self : AtomicInt,
-  value : Int,
-  order? : MemoryOrdering = SeqCst,
+  value : Int32,
+  order~ : MemoryOrdering = SeqCst,
 ) -> Unit raise SyncError {
   validate_store_order(order)
   native_atomic_int_store(self, value, order.code())
@@ -155,20 +155,20 @@ pub fn AtomicInt::store(
 ///|
 pub fn AtomicInt::swap(
   self : AtomicInt,
-  value : Int,
-  order? : MemoryOrdering = SeqCst,
-) -> Int {
+  value : Int32,
+  order~ : MemoryOrdering = SeqCst,
+) -> Int32 {
   native_atomic_int_swap(self, value, order.code())
 }
 
 ///|
 pub fn AtomicInt::compare_exchange(
   self : AtomicInt,
-  current : Int,
-  next : Int,
-  success? : MemoryOrdering = SeqCst,
-  failure? : MemoryOrdering = SeqCst,
-) -> CompareExchangeResult[Int] raise SyncError {
+  current : Int32,
+  next : Int32,
+  success~ : MemoryOrdering = SeqCst,
+  failure~ : MemoryOrdering = SeqCst,
+) -> CompareExchangeResult[Int32] raise SyncError {
   validate_compare_exchange_orders(success, failure)
   let packed = native_atomic_int_compare_exchange(
     self,
@@ -186,15 +186,15 @@ pub fn AtomicInt::compare_exchange(
 ///|
 pub fn AtomicInt::fetch_add(
   self : AtomicInt,
-  delta : Int,
-  order? : MemoryOrdering = SeqCst,
-) -> Int {
+  delta : Int32,
+  order~ : MemoryOrdering = SeqCst,
+) -> Int32 {
   native_atomic_int_fetch_add(self, delta, order.code())
 }
 
 ///|
 /// Creates a 32-bit unsigned atomic integer.
-pub fn AtomicUInt::new(value : UInt) -> AtomicUInt {
+pub fn AtomicUInt::new(value : UInt32) -> AtomicUInt {
   native_atomic_uint_new(value)
 }
 
@@ -207,8 +207,8 @@ pub fn AtomicUInt::share(self : AtomicUInt) -> AtomicUInt {
 ///|
 pub fn AtomicUInt::load(
   self : AtomicUInt,
-  order? : MemoryOrdering = SeqCst,
-) -> UInt raise SyncError {
+  order~ : MemoryOrdering = SeqCst,
+) -> UInt32 raise SyncError {
   validate_load_order(order)
   native_atomic_uint_load(self, order.code())
 }
@@ -216,8 +216,8 @@ pub fn AtomicUInt::load(
 ///|
 pub fn AtomicUInt::store(
   self : AtomicUInt,
-  value : UInt,
-  order? : MemoryOrdering = SeqCst,
+  value : UInt32,
+  order~ : MemoryOrdering = SeqCst,
 ) -> Unit raise SyncError {
   validate_store_order(order)
   native_atomic_uint_store(self, value, order.code())
@@ -226,20 +226,20 @@ pub fn AtomicUInt::store(
 ///|
 pub fn AtomicUInt::swap(
   self : AtomicUInt,
-  value : UInt,
-  order? : MemoryOrdering = SeqCst,
-) -> UInt {
+  value : UInt32,
+  order~ : MemoryOrdering = SeqCst,
+) -> UInt32 {
   native_atomic_uint_swap(self, value, order.code())
 }
 
 ///|
 pub fn AtomicUInt::compare_exchange(
   self : AtomicUInt,
-  current : UInt,
-  next : UInt,
-  success? : MemoryOrdering = SeqCst,
-  failure? : MemoryOrdering = SeqCst,
-) -> CompareExchangeResult[UInt] raise SyncError {
+  current : UInt32,
+  next : UInt32,
+  success~ : MemoryOrdering = SeqCst,
+  failure~ : MemoryOrdering = SeqCst,
+) -> CompareExchangeResult[UInt32] raise SyncError {
   validate_compare_exchange_orders(success, failure)
   let packed = native_atomic_uint_compare_exchange(
     self,
@@ -257,8 +257,8 @@ pub fn AtomicUInt::compare_exchange(
 ///|
 pub fn AtomicUInt::fetch_add(
   self : AtomicUInt,
-  delta : UInt,
-  order? : MemoryOrdering = SeqCst,
-) -> UInt {
+  delta : UInt32,
+  order~ : MemoryOrdering = SeqCst,
+) -> UInt32 {
   native_atomic_uint_fetch_add(self, delta, order.code())
 }

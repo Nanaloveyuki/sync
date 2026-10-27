@@ -5,8 +5,8 @@
 /// channel never retains a MoonBit heap object from the sending thread.
 pub struct OwnedBytesSender {
   priv handle : OwnedBytesSenderHandle
-  priv max_message_bytes : Int
-  priv max_queued_bytes : Int
+  priv max_message_bytes : Int32
+  priv max_queued_bytes : Int32
 }
 
 ///|
@@ -22,7 +22,7 @@ pub struct OwnedBytesReceiver {
 /// Creates a bounded channel with a 4 MiB per-message and 16 MiB total queue
 /// byte limit. Capacity must be greater than zero.
 pub fn owned_bytes_bounded(
-  capacity : Int,
+  capacity : Int32,
 ) -> (OwnedBytesSender, OwnedBytesReceiver) raise SyncError {
   owned_bytes_bounded_with_limits(
     capacity,
@@ -38,9 +38,9 @@ pub fn owned_bytes_bounded(
 /// accepts at most `max_queued_bytes` of copied payloads at once, in addition
 /// to its message-count capacity.
 pub fn owned_bytes_bounded_with_limits(
-  capacity : Int,
-  max_message_bytes~ : Int,
-  max_queued_bytes~ : Int,
+  capacity : Int32,
+  max_message_bytes~ : Int32,
+  max_queued_bytes~ : Int32,
 ) -> (OwnedBytesSender, OwnedBytesReceiver) raise SyncError {
   if capacity <= 0 {
     raise SyncError::InvalidCapacity(capacity)
@@ -205,7 +205,7 @@ pub fn OwnedBytesReceiver::close(
 /// Returns the number of copied messages waiting to be received.
 pub fn OwnedBytesReceiver::length(
   self : OwnedBytesReceiver,
-) -> Int raise SyncError {
+) -> Int32 raise SyncError {
   let status = Ref::Ref(0)
   let length = native_owned_bytes_receiver_len(self.handle, status)
   if status.val != 0 {
@@ -216,6 +216,6 @@ pub fn OwnedBytesReceiver::length(
 
 ///|
 /// Returns the fixed message capacity.
-pub fn OwnedBytesReceiver::capacity(self : OwnedBytesReceiver) -> Int {
+pub fn OwnedBytesReceiver::capacity(self : OwnedBytesReceiver) -> Int32 {
   native_owned_bytes_receiver_capacity(self.handle)
 }

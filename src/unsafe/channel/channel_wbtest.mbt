@@ -1,12 +1,12 @@
 ///|
-extern "C" fn native_channel_test_fail_next_init(status : Int) -> Unit = "sync_channel_test_fail_next_init"
+extern "C" fn native_channel_test_fail_next_init(status : Int32) -> Unit = "sync_channel_test_fail_next_init"
 
 ///|
-extern "C" fn native_channel_test_fail_next_operation(status : Int) -> Unit = "sync_channel_test_fail_next_operation"
+extern "C" fn native_channel_test_fail_next_operation(status : Int32) -> Unit = "sync_channel_test_fail_next_operation"
 
 ///|
 test "bounded channel reports full empty and closed" {
-  let (sender, receiver) : (Sender[Int], Receiver[Int]) = bounded(1)
+  let (sender, receiver) : (Sender[Int32], Receiver[Int32]) = bounded(1)
   assert_eq(sender.try_send(7), Sent)
   assert_eq(sender.try_send(8), Full(8))
   assert_eq(receiver.try_recv(), Received(7))
@@ -26,7 +26,7 @@ test "bounded channel carries reference values" {
 
 ///|
 test "bounded channel supports multiple producers" {
-  let (sender, receiver) : (Sender[Int], Receiver[Int]) = bounded(8)
+  let (sender, receiver) : (Sender[Int32], Receiver[Int32]) = bounded(8)
   let sender1 = sender.share()
   let sender2 = sender.share()
   let first = @thread.spawn(() => {
@@ -55,14 +55,14 @@ test "bounded channel supports multiple producers" {
 test "bounded channel maps injected native failures" {
   native_channel_test_fail_next_init(345)
   try {
-    let _ : (Sender[Int], Receiver[Int]) = bounded(1)
+    let _ : (Sender[Int32], Receiver[Int32]) = bounded(1)
     fail("injected initialization failure should raise")
   } catch {
     SyncError::ChannelInitializationFailed(345) => ()
     _ => fail("unexpected error")
   }
 
-  let (sender, _receiver) : (Sender[Int], Receiver[Int]) = try! bounded(1)
+  let (sender, _receiver) : (Sender[Int32], Receiver[Int32]) = try! bounded(1)
   native_channel_test_fail_next_operation(456)
   try {
     ignore(sender.try_send(1))

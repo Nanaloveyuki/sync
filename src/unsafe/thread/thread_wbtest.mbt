@@ -4,13 +4,13 @@ priv suberror WorkerTestError {
 } derive(Debug)
 
 ///|
-extern "C" fn native_thread_test_fail_next_start(status : Int) -> Unit = "sync_thread_test_fail_next_start"
+extern "C" fn native_thread_test_fail_next_start(status : Int32) -> Unit = "sync_thread_test_fail_next_start"
 
 ///|
-extern "C" fn native_thread_test_fail_next_join(status : Int) -> Unit = "sync_thread_test_fail_next_join"
+extern "C" fn native_thread_test_fail_next_join(status : Int32) -> Unit = "sync_thread_test_fail_next_join"
 
 ///|
-extern "C" fn native_thread_test_fail_next_detach(status : Int) -> Unit = "sync_thread_test_fail_next_detach"
+extern "C" fn native_thread_test_fail_next_detach(status : Int32) -> Unit = "sync_thread_test_fail_next_detach"
 
 ///|
 test "thread returns a value and has an id" {
@@ -104,7 +104,7 @@ test "threads complete repeated concurrent spawn and join" {
   let completed = @atomic.AtomicInt::new(0)
   let mut total = 0
   for _ in 0..<16 {
-    let workers : Array[UnsafeThread[Int]] = []
+    let workers : Array[UnsafeThread[Int32]] = []
     for index in 0..<32 {
       let worker_completed = completed.share()
       workers.push(

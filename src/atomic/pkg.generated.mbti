@@ -20,22 +20,22 @@ pub fn AtomicBool::store(Self, Bool, order? : MemoryOrdering) -> Unit raise @typ
 pub fn AtomicBool::swap(Self, Bool, order? : MemoryOrdering) -> Bool
 
 type AtomicInt
-pub fn AtomicInt::compare_exchange(Self, Int, Int, success? : MemoryOrdering, failure? : MemoryOrdering) -> CompareExchangeResult[Int] raise @types.SyncError
-pub fn AtomicInt::fetch_add(Self, Int, order? : MemoryOrdering) -> Int
-pub fn AtomicInt::load(Self, order? : MemoryOrdering) -> Int raise @types.SyncError
-pub fn AtomicInt::new(Int) -> Self
+pub fn AtomicInt::compare_exchange(Self, Int32, Int32, success? : MemoryOrdering, failure? : MemoryOrdering) -> CompareExchangeResult[Int32] raise @types.SyncError
+pub fn AtomicInt::fetch_add(Self, Int32, order? : MemoryOrdering) -> Int32
+pub fn AtomicInt::load(Self, order? : MemoryOrdering) -> Int32 raise @types.SyncError
+pub fn AtomicInt::new(Int32) -> Self
 pub fn AtomicInt::share(Self) -> Self
-pub fn AtomicInt::store(Self, Int, order? : MemoryOrdering) -> Unit raise @types.SyncError
-pub fn AtomicInt::swap(Self, Int, order? : MemoryOrdering) -> Int
+pub fn AtomicInt::store(Self, Int32, order? : MemoryOrdering) -> Unit raise @types.SyncError
+pub fn AtomicInt::swap(Self, Int32, order? : MemoryOrdering) -> Int32
 
 type AtomicUInt
-pub fn AtomicUInt::compare_exchange(Self, UInt, UInt, success? : MemoryOrdering, failure? : MemoryOrdering) -> CompareExchangeResult[UInt] raise @types.SyncError
-pub fn AtomicUInt::fetch_add(Self, UInt, order? : MemoryOrdering) -> UInt
-pub fn AtomicUInt::load(Self, order? : MemoryOrdering) -> UInt raise @types.SyncError
-pub fn AtomicUInt::new(UInt) -> Self
+pub fn AtomicUInt::compare_exchange(Self, UInt32, UInt32, success? : MemoryOrdering, failure? : MemoryOrdering) -> CompareExchangeResult[UInt32] raise @types.SyncError
+pub fn AtomicUInt::fetch_add(Self, UInt32, order? : MemoryOrdering) -> UInt32
+pub fn AtomicUInt::load(Self, order? : MemoryOrdering) -> UInt32 raise @types.SyncError
+pub fn AtomicUInt::new(UInt32) -> Self
 pub fn AtomicUInt::share(Self) -> Self
-pub fn AtomicUInt::store(Self, UInt, order? : MemoryOrdering) -> Unit raise @types.SyncError
-pub fn AtomicUInt::swap(Self, UInt, order? : MemoryOrdering) -> UInt
+pub fn AtomicUInt::store(Self, UInt32, order? : MemoryOrdering) -> Unit raise @types.SyncError
+pub fn AtomicUInt::swap(Self, UInt32, order? : MemoryOrdering) -> UInt32
 
 pub struct CompareExchangeResult[T] {
   observed : T

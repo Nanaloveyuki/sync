@@ -21,7 +21,7 @@ pub struct Receiver[T] {
 ///
 /// Dropping the final sender closes the channel. Closing or dropping either
 /// endpoint wakes blocked senders and receivers.
-pub fn[T] bounded(capacity : Int) -> (Sender[T], Receiver[T]) raise SyncError {
+pub fn[T] bounded(capacity : Int32) -> (Sender[T], Receiver[T]) raise SyncError {
   if capacity <= 0 {
     raise SyncError::InvalidCapacity(capacity)
   }
@@ -165,7 +165,7 @@ pub fn[T] Receiver::close(self : Receiver[T]) -> Unit raise SyncError {
 }
 
 ///|
-pub fn[T] Receiver::length(self : Receiver[T]) -> Int raise SyncError {
+pub fn[T] Receiver::length(self : Receiver[T]) -> Int32 raise SyncError {
   ignore(self.marker)
   let status = Ref::Ref(0)
   let length = native_receiver_len(self.handle, status)
@@ -176,7 +176,7 @@ pub fn[T] Receiver::length(self : Receiver[T]) -> Int raise SyncError {
 }
 
 ///|
-pub fn[T] Receiver::capacity(self : Receiver[T]) -> Int {
+pub fn[T] Receiver::capacity(self : Receiver[T]) -> Int32 {
   ignore(self.marker)
   native_receiver_capacity(self.handle)
 }

@@ -1,36 +1,36 @@
 ///|
 pub(all) suberror SyncError {
   InvalidMemoryOrdering(String)
-  InvalidCapacity(Int)
-  InvalidMessageSizeLimit(Int)
-  InvalidQueuedByteLimit(Int)
+  InvalidCapacity(Int32)
+  InvalidMessageSizeLimit(Int32)
+  InvalidQueuedByteLimit(Int32)
   InvalidOwnedBytesLimits
-  InvalidWorkerCount(Int)
+  InvalidWorkerCount(Int32)
   InvalidWaitGroupCount
-  ChannelInitializationFailed(Int)
-  ChannelOperationFailed(Int)
-  MutexInitializationFailed(Int)
-  CondvarInitializationFailed(Int)
-  CondvarOperationFailed(Int)
-  RwLockInitializationFailed(Int)
-  RwLockOperationFailed(Int)
-  MutexOperationFailed(Int)
-  OnceInitializationFailed(Int)
-  OnceOperationFailed(Int)
-  WaitGroupInitializationFailed(Int)
-  WaitGroupOperationFailed(Int)
-  ThreadCreationFailed(Int)
-  ThreadInitializationFailed(Int)
-  ThreadJoinFailed(Int)
-  ThreadDetachFailed(Int)
+  ChannelInitializationFailed(Int32)
+  ChannelOperationFailed(Int32)
+  MutexInitializationFailed(Int32)
+  CondvarInitializationFailed(Int32)
+  CondvarOperationFailed(Int32)
+  RwLockInitializationFailed(Int32)
+  RwLockOperationFailed(Int32)
+  MutexOperationFailed(Int32)
+  OnceInitializationFailed(Int32)
+  OnceOperationFailed(Int32)
+  WaitGroupInitializationFailed(Int32)
+  WaitGroupOperationFailed(Int32)
+  ThreadCreationFailed(Int32)
+  ThreadInitializationFailed(Int32)
+  ThreadJoinFailed(Int32)
+  ThreadDetachFailed(Int32)
   ThreadAlreadyJoined
   ThreadAlreadyDetached
   ThreadOperationInProgress
-  ThreadOperationFailed(Int)
+  ThreadOperationFailed(Int32)
   ThreadJoinSelf
   ThreadPanicked(String)
-  ThreadPoolCreationFailed(Int)
-  ThreadPoolOperationFailed(Int)
+  ThreadPoolCreationFailed(Int32)
+  ThreadPoolOperationFailed(Int32)
   ThreadPoolClosed
   ThreadPoolWouldDeadlock
   ThreadPoolShutdownFromWorker

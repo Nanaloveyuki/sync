@@ -13,8 +13,8 @@ let max_queue_capacity = 16_384
 /// The pool accepts at most 64 workers and 16_384 queued tasks. These limits
 /// keep caller-controlled sizes within a bounded native resource budget.
 pub fn ThreadPool::new(
-  worker_count : Int,
-  queue_capacity : Int,
+  worker_count : Int32,
+  queue_capacity : Int32,
 ) -> ThreadPool raise SyncError {
   if worker_count <= 0 || worker_count > max_worker_count {
     raise SyncError::InvalidWorkerCount(worker_count)
@@ -127,12 +127,12 @@ pub fn ThreadPool::is_closed(self : ThreadPool) -> Bool raise SyncError {
 }
 
 ///|
-pub fn ThreadPool::worker_count(self : ThreadPool) -> Int {
+pub fn ThreadPool::worker_count(self : ThreadPool) -> Int32 {
   native_thread_pool_worker_count(self)
 }
 
 ///|
-pub fn ThreadPool::pending_count(self : ThreadPool) -> Int raise SyncError {
+pub fn ThreadPool::pending_count(self : ThreadPool) -> Int32 raise SyncError {
   let status = Ref::Ref(0)
   let result = native_thread_pool_pending_count(self, status)
   if status.val != 0 {

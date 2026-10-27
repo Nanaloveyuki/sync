@@ -15,12 +15,12 @@ type ThreadPool
 pub fn ThreadPool::close(Self) -> Unit raise @types.SyncError
 pub fn ThreadPool::execute(Self, () -> Unit) -> Unit raise @types.SyncError
 pub fn ThreadPool::is_closed(Self) -> Bool raise @types.SyncError
-pub fn ThreadPool::new(Int, Int) -> Self raise @types.SyncError
-pub fn ThreadPool::pending_count(Self) -> Int raise @types.SyncError
+pub fn ThreadPool::new(Int32, Int32) -> Self raise @types.SyncError
+pub fn ThreadPool::pending_count(Self) -> Int32 raise @types.SyncError
 pub fn ThreadPool::share(Self) -> Self raise @types.SyncError
 pub fn ThreadPool::shutdown(Self) -> Unit raise @types.SyncError
 pub fn ThreadPool::try_execute(Self, () -> Unit) -> TryExecuteResult raise @types.SyncError
-pub fn ThreadPool::worker_count(Self) -> Int
+pub fn ThreadPool::worker_count(Self) -> Int32
 
 pub(all) enum TryExecuteResult {
   Submitted

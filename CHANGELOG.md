@@ -2,6 +2,15 @@
 
 All notable changes to `sync` are documented in this file.
 
+## Unreleased
+
+### Toolchain
+
+- Pin MoonBit to `moonc 0.10.17+d971670cd` with the matching
+  `moon 0.1.20261023` CLI and core library. Package versions and APIs are unchanged.
+- Regenerate interfaces and accept the 0.10.17 formatter's explicit-width numeric
+  type names and updated parameter-label syntax; these spelling changes preserve behavior.
+
 ## 0.7.2
 
 ### Toolchain

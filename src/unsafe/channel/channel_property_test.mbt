@@ -1,6 +1,6 @@
 ///|
 priv enum ChannelOperation {
-  Send(Int)
+  Send(Int32)
   TryRecv
   CloseSender
   CloseReceiver
@@ -29,10 +29,11 @@ test "bounded channel follows a queue model" {
   @quickcheck.check(
     (operations : Array[ChannelOperation]) => {
       let capacity = 1
-      let (sender, receiver) : (@channel.Sender[Int], @channel.Receiver[Int]) = @channel.bounded(
-        capacity,
-      )
-      let model : Array[Int] = []
+      let (sender, receiver) : (
+        @channel.Sender[Int32],
+        @channel.Receiver[Int32],
+      ) = @channel.bounded(capacity)
+      let model : Array[Int32] = []
       let mut head = 0
       let mut closed = false
       guard receiver.capacity() == capacity else { return false }

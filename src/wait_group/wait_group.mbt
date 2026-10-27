@@ -15,7 +15,7 @@ pub fn WaitGroup::share(self : WaitGroup) -> WaitGroup {
 }
 
 ///|
-pub fn WaitGroup::add(self : WaitGroup, delta : Int) -> Unit raise SyncError {
+pub fn WaitGroup::add(self : WaitGroup, delta : Int32) -> Unit raise SyncError {
   let status = Ref::Ref(0)
   if !native_wait_group_add(self, delta, status) {
     if status.val != 0 {

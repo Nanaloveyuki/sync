@@ -1,6 +1,6 @@
 ///|
 test "unsafe facade exposes raw APIs explicitly" {
-  let (sender, receiver) : (@unsafe.Sender[Int], @unsafe.Receiver[Int]) = @unsafe.bounded(
+  let (sender, receiver) : (@unsafe.Sender[Int32], @unsafe.Receiver[Int32]) = @unsafe.bounded(
     1,
   )
   assert_eq(sender.try_send(1), @unsafe.TrySendResult::Sent)

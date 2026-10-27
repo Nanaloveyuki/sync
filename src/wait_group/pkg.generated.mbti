@@ -11,7 +11,7 @@ import {
 
 // Types and methods
 type WaitGroup
-pub fn WaitGroup::add(Self, Int) -> Unit raise @types.SyncError
+pub fn WaitGroup::add(Self, Int32) -> Unit raise @types.SyncError
 pub fn WaitGroup::done(Self) -> Unit raise @types.SyncError
 pub fn WaitGroup::new() -> Self raise @types.SyncError
 pub fn WaitGroup::share(Self) -> Self

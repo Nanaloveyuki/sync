@@ -1,11 +1,11 @@
 ///|
-extern "C" fn native_mutex_test_fail_next_init(status : Int) -> Unit = "sync_mutex_test_fail_next_init"
+extern "C" fn native_mutex_test_fail_next_init(status : Int32) -> Unit = "sync_mutex_test_fail_next_init"
 
 ///|
-extern "C" fn native_condvar_test_fail_next_init(status : Int) -> Unit = "sync_condvar_test_fail_next_init"
+extern "C" fn native_condvar_test_fail_next_init(status : Int32) -> Unit = "sync_condvar_test_fail_next_init"
 
 ///|
-extern "C" fn native_condvar_test_fail_next_notify(status : Int) -> Unit = "sync_condvar_test_fail_next_notify"
+extern "C" fn native_condvar_test_fail_next_notify(status : Int32) -> Unit = "sync_condvar_test_fail_next_notify"
 
 ///|
 test "mutex protects a generic value" {

@@ -3,8 +3,8 @@
 pub(all) enum OwnedBytesTrySendResult {
   Sent
   Full
-  QueueByteLimitReached(Int, Int)
-  MessageTooLarge(Int, Int)
+  QueueByteLimitReached(Int32, Int32)
+  MessageTooLarge(Int32, Int32)
   Closed
 } derive(Eq, Debug)
 
@@ -20,7 +20,7 @@ pub extend OwnedBytesTrySendResult with @debug.Debug::{to_repr}
 /// The result of a blocking owned-bytes send.
 pub(all) enum OwnedBytesSendResult {
   Sent
-  MessageTooLarge(Int, Int)
+  MessageTooLarge(Int32, Int32)
   Closed
 } derive(Eq, Debug)
 
