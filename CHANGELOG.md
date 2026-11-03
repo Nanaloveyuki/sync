@@ -2,6 +2,13 @@
 
 All notable changes to `sync` are documented in this file.
 
+## 0.7.4 - 2026-11-03
+
+### Toolchain
+
+- Update the development and CI compiler pin to `0.10.19+97801ee1b`
+  with CLI `moon 0.1.20261029`; preserve the native public API.
+
 ## 0.7.3 - 2026-10-27
 
 ### Toolchain
