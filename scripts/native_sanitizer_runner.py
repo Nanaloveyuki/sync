@@ -122,33 +122,6 @@ def _is_entry(package_dir: Path, text: str) -> bool:
     return is_main or is_executable or any(package_dir.glob("*_test.mbt"))
 
 
-def _find_moonbitrun() -> Path:
-    moon = shutil.which("moon")
-    candidates: list[Path] = []
-    if moon:
-        candidates.append(Path(moon).resolve().parent.parent / "lib" / "libmoonbitrun.o")
-    moon_home = Path(os.environ.get("MOON_HOME", Path.home() / ".moon"))
-    candidates.append(moon_home / "lib" / "libmoonbitrun.o")
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    raise FileNotFoundError("could not locate libmoonbitrun.o")
-
-
-def _disable_mimalloc(cc: str) -> tuple[Path, bytes]:
-    runtime = _find_moonbitrun()
-    original = runtime.read_bytes()
-    try:
-        with tempfile.NamedTemporaryFile(suffix=".c") as source:
-            source.write(b"/* sanitizer allocator replacement */\n")
-            source.flush()
-            subprocess.run([cc, "-c", source.name, "-o", str(runtime)], check=True)
-    except Exception:
-        runtime.write_bytes(original)
-        raise
-    return runtime, original
-
-
 def _probe_runtime(cc: str, config: SanitizerConfig, env: dict[str, str]) -> None:
     with tempfile.TemporaryDirectory(prefix="sync-sanitizer-probe-") as directory:
         root = Path(directory)
@@ -196,10 +169,14 @@ def main(sanitizer: str) -> int:
 
     env = os.environ.copy()
     env.update(config.environment)
+    # Keep generated program C and the compiled runtime on the same allocator.
+    # Replacing libmoonbitrun.o leaves unresolved mi_malloc/mi_free references
+    # with current MoonBit; use the supported allocator selection instead.
+    env["MOON_CC"] = cc
+    env["MOONBIT_ALLOCATOR"] = "mimalloc" if args.no_disable_mimalloc else "system"
     _probe_runtime(cc, config, env)
 
     snapshots = {path: path.read_text(encoding="utf-8") for path in package_files}
-    allocator_backup: tuple[Path, bytes] | None = None
     try:
         for path in package_files:
             original = snapshots[path]
@@ -213,9 +190,6 @@ def main(sanitizer: str) -> int:
             )
             if patched != original:
                 path.write_text(patched, encoding="utf-8")
-
-        if not args.no_disable_mimalloc:
-            allocator_backup = _disable_mimalloc(cc)
 
         with tempfile.TemporaryDirectory(prefix=config.target_prefix) as target_dir:
             command = [
@@ -231,6 +205,3 @@ def main(sanitizer: str) -> int:
     finally:
         for path, original in snapshots.items():
             path.write_text(original, encoding="utf-8")
-        if allocator_backup is not None:
-            runtime, original = allocator_backup
-            runtime.write_bytes(original)
