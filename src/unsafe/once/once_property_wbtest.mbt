@@ -1,7 +1,8 @@
 ///|
+#derive(Debug)
 priv suberror OncePropertyError {
   CallbackFailed
-} derive(Debug)
+}
 
 ///|
 test "once follows a successful-or-poisoned model" {

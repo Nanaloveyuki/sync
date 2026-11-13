@@ -1,9 +1,10 @@
 ///|
+#derive(Eq, Debug)
 pub(all) enum TrySendResult[T] {
   Sent
   Full(T)
   Closed(T)
-} derive(Eq, Debug)
+}
 
 ///|
 #doc(hidden)
@@ -14,11 +15,12 @@ pub extend TrySendResult with Eq::{equal, not_equal}
 pub extend TrySendResult with @debug.Debug::{to_repr}
 
 ///|
+#derive(Eq, Debug)
 pub(all) enum TryRecvResult[T] {
   Received(T)
   Empty
   Closed
-} derive(Eq, Debug)
+}
 
 ///|
 #doc(hidden)

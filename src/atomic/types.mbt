@@ -3,6 +3,7 @@
 ///
 /// Windows uses Interlocked operations and may strengthen every ordering to
 /// SeqCst. Linux implements the requested ordering with compiler atomics.
+#derive(Eq, Debug)
 pub(all) enum MemoryOrdering {
   /// No inter-thread synchronization beyond atomicity.
   Relaxed
@@ -14,7 +15,7 @@ pub(all) enum MemoryOrdering {
   AcqRel
   /// Participates in one global sequentially consistent order.
   SeqCst
-} derive(Eq, Debug)
+}
 
 ///|
 #doc(hidden)
@@ -36,10 +37,11 @@ fn MemoryOrdering::code(self : MemoryOrdering) -> Int32 {
 }
 
 ///|
+#derive(Eq, Debug)
 pub struct CompareExchangeResult[T] {
   observed : T
   exchanged : Bool
-} derive(Eq, Debug)
+}
 
 ///|
 #doc(hidden)

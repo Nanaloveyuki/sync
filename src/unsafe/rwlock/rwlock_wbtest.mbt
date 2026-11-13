@@ -1,7 +1,8 @@
 ///|
+#derive(Debug)
 priv suberror WorkerTestError {
   WorkerFailed
-} derive(Debug)
+}
 
 ///|
 extern "C" fn native_rwlock_test_fail_next_init(status : Int32) -> Unit = "sync_rwlock_test_fail_next_init"

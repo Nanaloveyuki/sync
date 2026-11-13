@@ -2,6 +2,15 @@
 
 All notable changes to `sync` are documented in this file.
 
+## 0.7.5 - 2026-11-13
+
+### Toolchain
+
+- Pin development and CI to compiler `0.10.20+65efd5b93` with CLI
+  `moon 0.1.20261104` and its matching core library.
+- Migrate derived traits to `#derive` and regenerate interfaces without changing
+  public APIs.
+
 ## 0.7.4 - 2026-11-03
 
 ### Toolchain

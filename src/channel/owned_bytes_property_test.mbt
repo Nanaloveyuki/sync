@@ -1,10 +1,11 @@
 ///|
+#derive(Debug)
 priv enum OwnedBytesOperation {
   Send(Bytes)
   TryRecv
   CloseSender
   CloseReceiver
-} derive(Debug)
+}
 
 ///|
 impl @quickcheck.Arbitrary for OwnedBytesOperation with fn arbitrary(size, rs) {

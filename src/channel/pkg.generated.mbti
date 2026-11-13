@@ -23,11 +23,12 @@ pub fn OwnedBytesReceiver::length(Self) -> Int32 raise @types.SyncError
 pub fn OwnedBytesReceiver::recv(Self) -> Bytes? raise @types.SyncError
 pub fn OwnedBytesReceiver::try_recv(Self) -> OwnedBytesTryRecvResult raise @types.SyncError
 
+#derive(Eq, @debug.Debug)
 pub(all) enum OwnedBytesSendResult {
   Sent
   MessageTooLarge(Int32, Int32)
   Closed
-} derive(Eq, @debug.Debug)
+}
 
 pub struct OwnedBytesSender {
   // private fields
@@ -38,19 +39,21 @@ pub fn OwnedBytesSender::send_checked(Self, Bytes) -> OwnedBytesSendResult raise
 pub fn OwnedBytesSender::share(Self) -> Self raise @types.SyncError
 pub fn OwnedBytesSender::try_send(Self, Bytes) -> OwnedBytesTrySendResult raise @types.SyncError
 
+#derive(Eq, @debug.Debug)
 pub(all) enum OwnedBytesTryRecvResult {
   Received(Bytes)
   Empty
   Closed
-} derive(Eq, @debug.Debug)
+}
 
+#derive(Eq, @debug.Debug)
 pub(all) enum OwnedBytesTrySendResult {
   Sent
   Full
   QueueByteLimitReached(Int32, Int32)
   MessageTooLarge(Int32, Int32)
   Closed
-} derive(Eq, @debug.Debug)
+}
 
 // Type aliases
 pub using @types {type SyncError}

@@ -37,18 +37,20 @@ pub fn AtomicUInt::share(Self) -> Self
 pub fn AtomicUInt::store(Self, UInt32, order? : MemoryOrdering) -> Unit raise @types.SyncError
 pub fn AtomicUInt::swap(Self, UInt32, order? : MemoryOrdering) -> UInt32
 
+#derive(Eq, @debug.Debug)
 pub struct CompareExchangeResult[T] {
   observed : T
   exchanged : Bool
-} derive(Eq, @debug.Debug)
+}
 
+#derive(Eq, @debug.Debug)
 pub(all) enum MemoryOrdering {
   Relaxed
   Acquire
   Release
   AcqRel
   SeqCst
-} derive(Eq, @debug.Debug)
+}
 
 // Type aliases
 pub using @types {type SyncError}

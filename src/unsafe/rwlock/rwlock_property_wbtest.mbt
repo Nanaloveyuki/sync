@@ -1,7 +1,8 @@
 ///|
+#derive(Debug)
 priv suberror RwLockPropertyError {
   CallbackFailed
-} derive(Debug)
+}
 
 ///|
 test "rwlock releases both callback modes after failures" {

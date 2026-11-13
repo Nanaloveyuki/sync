@@ -1,10 +1,11 @@
 ///|
+#derive(Debug)
 priv enum ChannelOperation {
   Send(Int32)
   TryRecv
   CloseSender
   CloseReceiver
-} derive(Debug)
+}
 
 ///|
 impl @quickcheck.Arbitrary for ChannelOperation with fn arbitrary(size, rs) {

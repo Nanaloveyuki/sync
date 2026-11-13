@@ -1,7 +1,8 @@
 ///|
+#derive(Debug)
 priv suberror WorkerTestError {
   WorkerFailed
-} derive(Debug)
+}
 
 ///|
 extern "C" fn native_thread_test_fail_next_start(status : Int32) -> Unit = "sync_thread_test_fail_next_start"

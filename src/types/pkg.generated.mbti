@@ -8,6 +8,7 @@ import {
 // Values
 
 // Errors
+#derive(@debug.Debug)
 pub(all) suberror SyncError {
   InvalidMemoryOrdering(String)
   InvalidCapacity(Int32)
@@ -44,7 +45,7 @@ pub(all) suberror SyncError {
   ThreadPoolWouldDeadlock
   ThreadPoolShutdownFromWorker
   OncePoisoned
-} derive(@debug.Debug)
+}
 
 // Types and methods
 

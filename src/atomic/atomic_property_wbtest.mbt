@@ -1,11 +1,12 @@
 ///|
+#derive(Debug)
 priv enum AtomicOperation {
   Load
   Store(Int32)
   Swap(Int32)
   FetchAdd(Int32)
   CompareExchange(Int32, Int32)
-} derive(Debug)
+}
 
 ///|
 impl @quickcheck.Arbitrary for AtomicOperation with fn arbitrary(size, rs) {

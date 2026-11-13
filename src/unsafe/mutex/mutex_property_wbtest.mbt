@@ -1,14 +1,16 @@
 ///|
+#derive(Debug)
 priv suberror MutexPropertyError {
   CallbackFailed
-} derive(Debug)
+}
 
 ///|
+#derive(Debug)
 priv enum MutexOperation {
   Add(Int32)
   Fail
   Read
-} derive(Debug)
+}
 
 ///|
 impl @quickcheck.Arbitrary for MutexOperation with fn arbitrary(size, rs) {

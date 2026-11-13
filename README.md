@@ -7,7 +7,7 @@ it is not an async runtime or a UI-thread dispatcher.
 ## Install
 
 ```sh
-moon add Nanaloveyuki/sync@0.7.4
+moon add Nanaloveyuki/sync@0.7.5
 ```
 
 Import the root facade from a consumer package:
@@ -205,7 +205,7 @@ shutdown must not run on a UI event-loop thread.
 ## Verification
 
 Development and CI use the compiler archive in `.moonbit-toolchain`:
-`0.10.19+97801ee1b` (2026-10-30), with `moon 0.1.20261029` and its matching core library.
+`0.10.20+65efd5b93` (2026-11-05), with `moon 0.1.20261104` and its matching core library.
 
 ```sh
 curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- "$(cat .moonbit-toolchain)"

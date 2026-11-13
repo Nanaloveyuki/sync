@@ -22,11 +22,12 @@ pub fn ThreadPool::shutdown(Self) -> Unit raise @types.SyncError
 pub fn ThreadPool::try_execute(Self, () -> Unit) -> TryExecuteResult raise @types.SyncError
 pub fn ThreadPool::worker_count(Self) -> Int32
 
+#derive(Eq, @debug.Debug)
 pub(all) enum TryExecuteResult {
   Submitted
   QueueFull
   PoolClosed
-} derive(Eq, @debug.Debug)
+}
 
 // Type aliases
 pub using @types {type SyncError}

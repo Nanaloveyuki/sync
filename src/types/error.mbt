@@ -1,4 +1,5 @@
 ///|
+#derive(Debug)
 pub(all) suberror SyncError {
   InvalidMemoryOrdering(String)
   InvalidCapacity(Int32)
@@ -35,7 +36,7 @@ pub(all) suberror SyncError {
   ThreadPoolWouldDeadlock
   ThreadPoolShutdownFromWorker
   OncePoisoned
-} derive(Debug)
+}
 
 ///|
 #doc(hidden)

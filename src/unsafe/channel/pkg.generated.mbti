@@ -29,17 +29,19 @@ pub fn[T] Sender::send(Self[T], T) -> Result[Unit, T] raise @types.SyncError
 pub fn[T] Sender::share(Self[T]) -> Self[T] raise @types.SyncError
 pub fn[T] Sender::try_send(Self[T], T) -> TrySendResult[T] raise @types.SyncError
 
+#derive(Eq, @debug.Debug)
 pub(all) enum TryRecvResult[T] {
   Received(T)
   Empty
   Closed
-} derive(Eq, @debug.Debug)
+}
 
+#derive(Eq, @debug.Debug)
 pub(all) enum TrySendResult[T] {
   Sent
   Full(T)
   Closed(T)
-} derive(Eq, @debug.Debug)
+}
 
 // Type aliases
 pub using @types {type SyncError}
