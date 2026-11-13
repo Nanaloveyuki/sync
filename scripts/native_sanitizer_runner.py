@@ -76,12 +76,13 @@ def _patch_package(
     text: str,
     *,
     flags: str,
+    stub_flags: str,
     has_stub: bool,
     is_entry: bool,
 ) -> str:
     entries: list[str] = []
     if has_stub:
-        entries.append(f'"stub-cc-flags": "{flags}"')
+        entries.append(f'"stub-cc-flags": "{stub_flags}"')
     if is_entry:
         entries.append(f'"cc-flags": "{flags}"')
         entries.append(f'"cc-link-flags": "{flags}"')
@@ -175,6 +176,17 @@ def main(sanitizer: str) -> int:
     env["MOON_CC"] = cc
     env["MOONBIT_ALLOCATOR"] = "mimalloc" if args.no_disable_mimalloc else "system"
     _probe_runtime(cc, config, env)
+    stub_flags = config.flags
+    compiler_version = subprocess.run(
+        [cc, "--version"], check=True, capture_output=True, text=True
+    ).stdout
+    if sanitizer == "address" and "clang" in compiler_version.lower():
+        # MoonBit's documented FuncRef + closure callback ABI passes closure
+        # struct pointers through C's void* userdata. Clang's function sanitizer
+        # treats these ABI-compatible pointer types as different signatures.
+        # Exclude only that check in C stubs; generated MoonBit C retains all
+        # UBSan checks, and stubs retain ASan and every other UBSan check.
+        stub_flags += " -fno-sanitize=function"
 
     snapshots = {path: path.read_text(encoding="utf-8") for path in package_files}
     try:
@@ -185,6 +197,7 @@ def main(sanitizer: str) -> int:
             patched = _patch_package(
                 original,
                 flags=config.flags,
+                stub_flags=stub_flags,
                 has_stub=has_stub,
                 is_entry=is_entry,
             )
