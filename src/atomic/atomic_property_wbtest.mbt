@@ -10,7 +10,7 @@ priv enum AtomicOperation {
 
 ///|
 impl @quickcheck.Arbitrary for AtomicOperation with fn arbitrary(size, rs) {
-  let values = @quickcheck.int_range(-8, 9)
+  let values = @quickcheck.int_range(-8, 9, inclusive=false)
   match rs.next_uint() % 5U {
     0 => Load
     1 => Store(values.run(size, rs))

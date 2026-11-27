@@ -10,7 +10,8 @@ priv enum ChannelOperation {
 ///|
 impl @quickcheck.Arbitrary for ChannelOperation with fn arbitrary(size, rs) {
   match rs.next_uint() % 6U {
-    0 | 1 | 2 => Send(@quickcheck.int_range(-32, 33).run(size, rs))
+    0 | 1 | 2 =>
+      Send(@quickcheck.int_range(-32, 33, inclusive=false).run(size, rs))
     3 => TryRecv
     4 => CloseSender
     _ => CloseReceiver

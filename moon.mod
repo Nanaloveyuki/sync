@@ -1,6 +1,6 @@
 name = "Nanaloveyuki/sync"
 
-version = "0.7.5"
+version = "0.8.0"
 
 description = "Minimal native concurrency primitives for MoonBit."
 

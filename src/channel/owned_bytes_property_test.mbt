@@ -11,7 +11,7 @@ priv enum OwnedBytesOperation {
 impl @quickcheck.Arbitrary for OwnedBytesOperation with fn arbitrary(size, rs) {
   match rs.next_uint() % 6U {
     0 | 1 | 2 => {
-      let length = @quickcheck.int_range(0, 9).run(size, rs)
+      let length = @quickcheck.int_range(0, 9, inclusive=false).run(size, rs)
       Send(
         Bytes::makei(length, _ => @quickcheck.Arbitrary::arbitrary(size, rs)),
       )

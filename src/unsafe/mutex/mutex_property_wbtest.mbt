@@ -15,7 +15,8 @@ priv enum MutexOperation {
 ///|
 impl @quickcheck.Arbitrary for MutexOperation with fn arbitrary(size, rs) {
   match rs.next_uint() % 5U {
-    0 | 1 | 2 => Add(@quickcheck.int_range(-8, 9).run(size, rs))
+    0 | 1 | 2 =>
+      Add(@quickcheck.int_range(-8, 9, inclusive=false).run(size, rs))
     3 => Fail
     _ => Read
   }

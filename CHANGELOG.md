@@ -2,6 +2,11 @@
 
 All notable changes to `sync` are documented in this file.
 
+## 0.8.0 - 2026-11-27
+
+- Pin MoonBit compiler archive `1.0.0-rc1+3c0520448` and CLI `0.1.20261126`.
+- Keep the existing exclusive upper bound in QuickCheck generators and verify the native concurrency suite.
+
 ## 0.7.5 - 2026-11-13
 
 ### Toolchain
